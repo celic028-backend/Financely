@@ -1,0 +1,121 @@
+@import 'tailwindcss';
+
+/* ---------- Financely dizajn sistem ---------- */
+/* Svetla, minimal clean, futuristička tema sa indigo→cijan akcentom. */
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    Roboto, Helvetica, Arial, sans-serif;
+
+  /* Pozadina i površine */
+  --color-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f3f8;
+
+  /* Tekst */
+  --color-ink: #0f172a;
+  --color-ink-muted: #64748b;
+  --color-ink-faint: #94a3b8;
+
+  /* Ivice */
+  --color-line: #e6e9f0;
+
+  /* Akcenat (indigo → cijan) */
+  --color-brand: #4f46e5;
+  --color-brand-2: #06b6d4;
+  --color-brand-soft: #eef0fe;
+
+  /* Semantika: prihod / trošak */
+  --color-income: #16a34a;
+  --color-income-soft: #e8f7ee;
+  --color-expense: #f43f5e;
+  --color-expense-soft: #feecef;
+
+  /* Upozorenje */
+  --color-warn: #f59e0b;
+  --color-warn-soft: #fef4e2;
+
+  /* Radijusi */
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* Senke — mekane, suptilne */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.05);
+  --shadow-float: 0 8px 30px rgba(79, 70, 229, 0.28);
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  /* Tabularne cifre za sve iznose */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  /* Suptilan brand gradient tekst */
+  .brand-gradient {
+    background: linear-gradient(
+      100deg,
+      var(--color-brand),
+      var(--color-brand-2)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .brand-bg {
+    background: linear-gradient(
+      130deg,
+      var(--color-brand),
+      var(--color-brand-2)
+    );
+  }
+}
+
+@layer components {
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Bezbedne zone za iPhone (notch / home indicator) */
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top), 0.5rem);
+  }
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+}
+
+/* Sakrij scrollbar ali dozvoli skrol */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
