@@ -4,7 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import App from './App.tsx'
-import { bootstrap } from './lib/db'
+import { seedLocalDefaults } from './lib/db'
+import { AuthProvider } from './lib/auth'
+import { applyTheme, storedTheme } from './lib/theme'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -12,10 +14,13 @@ const queryClient = new QueryClient({
   },
 })
 
-// Seed profila i podrazumevanih kategorija (prvi put) pre renderovanja.
-await bootstrap()
+// Tema pre rendera (inline skripta u index.html je već postavila atribut).
+applyTheme(storedTheme())
 
-// Dev pomoć: window.__seedDemo() ubacuje demo transakcije.
+// Svež uređaj dobija seed odmah (offline-first onboarding pre logina);
+// bindUser kasnije briše/zamenjuje ako nalog već ima podatke u cloudu.
+await seedLocalDefaults()
+
 if (import.meta.env.DEV) {
   const { seedDemo } = await import('./lib/demo')
   ;(window as unknown as { __seedDemo: () => void }).__seedDemo = seedDemo
@@ -24,9 +29,11 @@ if (import.meta.env.DEV) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
 )

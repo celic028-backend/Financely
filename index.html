@@ -13,6 +13,21 @@
     <meta name="apple-mobile-web-app-title" content="Financely" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Financely — prati svoje pare</title>
+    <script>
+      // Tema pre prvog rendera — bez belog blica na tamnom modu.
+      ;(function () {
+        var t = localStorage.getItem('financely-theme')
+        if (t !== 'light' && t !== 'dark') t = 'auto'
+        document.documentElement.dataset.theme = t
+        var dark =
+          t === 'dark' ||
+          (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) {
+          var m = document.querySelector('meta[name="theme-color"]')
+          if (m) m.setAttribute('content', '#0b1017')
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

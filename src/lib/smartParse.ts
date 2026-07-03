@@ -1,3 +1,4 @@
+import { toDay } from './format'
 import type { Category, IncomeKind, TxType } from './types'
 
 export interface ParsedTx {
@@ -6,6 +7,8 @@ export interface ParsedTx {
   type: TxType
   incomeKind: IncomeKind | null
   description: string | null
+  /** YYYY-MM-DD ako je pomenut datum ("juče", "pre 3 dana"); null = danas. */
+  occurredOn: string | null
 }
 
 // Ključne reči -> id kategorije (za lokalno pogađanje kategorije).
@@ -57,13 +60,30 @@ function extractAmount(text: string): { amount: number | null; rest: string } {
   return { amount: null, rest: t }
 }
 
+/** Datum iz relativnih reči: "juče", "prekjuče", "danas", "pre N dana". */
+function extractDate(norm: string): { occurredOn: string | null; matched: string | null } {
+  const preN = norm.match(/pre\s+(\d+)\s+dana?/)
+  if (preN) return { occurredOn: daysAgo(parseInt(preN[1], 10)), matched: preN[0] }
+  if (norm.includes('prekjuce')) return { occurredOn: daysAgo(2), matched: 'prekjuce' }
+  if (norm.includes('juce')) return { occurredOn: daysAgo(1), matched: 'juce' }
+  if (norm.includes('danas')) return { occurredOn: daysAgo(0), matched: 'danas' }
+  return { occurredOn: null, matched: null }
+}
+
+function daysAgo(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return toDay(d)
+}
+
 /**
  * Lokalno pogađanje transakcije iz rečenice tipa "kafa 250" ili "juče 3000 na patike".
- * (Fallback dok se ne uveže AI parse u Fazi 3.)
+ * (Fallback kada Claude API nije dostupan.)
  */
 export function smartParseLocal(text: string, categories: Category[]): ParsedTx {
   const norm = normalize(text)
   const { amount, rest } = extractAmount(text)
+  const { occurredOn } = extractDate(norm)
 
   const isIncome = INCOME_HINTS.some((h) => norm.includes(h))
   const type: TxType = isIncome ? 'income' : 'expense'
@@ -85,7 +105,12 @@ export function smartParseLocal(text: string, categories: Category[]): ParsedTx 
       : 'extra'
     : null
 
-  const description = rest.trim() || null
+  // Skini datumske reči iz opisa ("juče sam platio kafu" -> "sam platio kafu")
+  const description =
+    rest
+      .replace(/\b(prekju[cč]e|ju[cč]e|danas|pre\s+\d+\s+dana?)\b/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim() || null
 
-  return { amount, categoryId, type, incomeKind, description }
+  return { amount, categoryId, type, incomeKind, description, occurredOn }
 }

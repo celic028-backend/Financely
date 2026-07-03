@@ -36,7 +36,7 @@ export default function History() {
       </header>
 
       {/* Pretraga */}
-      <div className="mb-3 flex items-center gap-2 rounded-2xl border border-[var(--color-line)] bg-white px-3.5 py-2.5">
+      <div className="mb-3 flex items-center gap-2 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3.5 py-2.5">
         <Search className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-faint)]" />
         <input
           value={q}

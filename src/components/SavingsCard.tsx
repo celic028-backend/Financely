@@ -10,7 +10,7 @@ export function SavingsCard() {
   if (!goal || (goal.currentSaved === 0 && goal.targetAmount === 0)) {
     return (
       <Link
-        to="/podesavanja"
+        to="/stednja"
         className="card flex items-center gap-3 p-4 active:scale-[0.99]"
       >
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--color-brand-soft)] text-[var(--color-brand)]">
@@ -33,7 +33,7 @@ export function SavingsCard() {
     : 0
 
   return (
-    <Link to="/podesavanja" className="card block p-4 active:scale-[0.99]">
+    <Link to="/stednja" className="card block p-4 active:scale-[0.99]">
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--color-income-soft)] text-[var(--color-income)]">
           <PiggyBank className="h-5 w-5" />

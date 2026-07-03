@@ -48,19 +48,26 @@ export interface RecurringItem {
   active: boolean
 }
 
+export type SavingsMode = 'percent' | 'fixed'
+
 export interface SavingsGoal {
   id: string
   userId: string
   targetAmount: number
   targetDate?: string | null
   currentSaved: number
+  mode: SavingsMode
+  /** Procenat prihoda (0–1), koristi se kad mode === 'percent'. */
+  rate: number
+  /** Fiksni mesečni iznos, koristi se kad mode === 'fixed'. */
+  fixedAmount: number
 }
 
 export interface SavingsEntry {
   id: string
   userId: string
   amount: number
-  source: 'monthly_leftover' | 'manual'
+  source: 'auto' | 'manual' | 'monthly_leftover' | 'withdraw'
   createdAt: string
 }
 
@@ -78,6 +85,17 @@ export interface ProfileSettings {
   remindBudget: boolean
   remindIncome: boolean
   hapticOn: boolean
+  /** Push obaveštenja po vrsti (server ih poštuje pri slanju). */
+  notifyDue?: boolean // ponavljanja stižu
+  notifyGoal?: boolean // ugrožavaš cilj štednje
+  notifyDaily?: boolean // dnevni podsetnik za unos
+  notifyMonthly?: boolean // mesečni rezime
   /** Poslednji mesec (YYYY-MM) za koji je višak obrađen (prebačen ili preskočen). */
   lastLeftoverHandledMonth?: string | null
+  /** Kada je korisnik završio uvodni tok (ISO); null = prikaži onboarding. */
+  onboardedAt?: string | null
+  /** Tema aplikacije. */
+  theme?: 'auto' | 'light' | 'dark'
+  /** Ime korisnika za personalizovan pozdrav. */
+  displayName?: string | null
 }

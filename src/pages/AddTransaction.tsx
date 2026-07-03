@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { X, Trash2, Sparkles, Check } from 'lucide-react'
+import { X, Trash2, Sparkles, Check, Mic, CalendarDays, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { db } from '../lib/db'
 import { useCategories } from '../hooks/useData'
+import { useVoice } from '../hooks/useVoice'
 import { addTransaction, updateTransaction, deleteTransaction } from '../lib/repo'
 import { smartParseLocal } from '../lib/smartParse'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { haptic } from '../lib/haptics'
-import { formatNumber, today, toDay, parseDay } from '../lib/format'
+import { hapticIfOn } from '../lib/haptics'
+import { formatNumber, currencySymbol, today, toDay, parseDay, formatDayShort } from '../lib/format'
 import type { TxType } from '../lib/types'
 
 export default function AddTransaction() {
@@ -27,6 +29,7 @@ export default function AddTransaction() {
   const [occurredOn, setOccurredOn] = useState(today())
   const [description, setDescription] = useState('')
   const [smart, setSmart] = useState('')
+  const [saving, setSaving] = useState(false)
   const [loaded, setLoaded] = useState(!editId)
 
   // Učitaj postojeću transakciju u edit modu
@@ -56,25 +59,32 @@ export default function AddTransaction() {
     if (t === type) return
     setType(t)
     setCategoryId(null)
-    haptic(8)
+    hapticIfOn(8)
   }
 
-  function applySmart() {
-    const parsed = smartParseLocal(smart, allCats)
+  function applySmart(text?: string) {
+    const parsed = smartParseLocal(text ?? smart, allCats)
     if (parsed.type !== type) {
       setType(parsed.type)
     }
     if (parsed.amount != null) setAmount(String(parsed.amount))
     if (parsed.categoryId) setCategoryId(parsed.categoryId)
     if (parsed.description) setDescription(parsed.description)
-    haptic(10)
+    if (parsed.occurredOn) setOccurredOn(parsed.occurredOn)
+    hapticIfOn(10)
   }
 
+  const voice = useVoice((text) => {
+    setSmart(text)
+    applySmart(text)
+  })
+
   const amountNum = parseInt(amount || '0', 10)
-  const canSave = amountNum > 0 && !!categoryId
+  const canSave = amountNum > 0 && !!categoryId && !saving
 
   async function save() {
-    if (!canSave || !categoryId) return
+    if (!canSave || !categoryId || saving) return
+    setSaving(true)
     const cat = allCats.find((c) => c.id === categoryId)
     const incomeKind = type === 'income' ? (cat?.incomeKind ?? 'extra') : null
     if (editId) {
@@ -96,23 +106,29 @@ export default function AddTransaction() {
         occurredOn,
       })
     }
-    haptic([10, 30, 10])
+    hapticIfOn([10, 30, 10])
     navigate(-1)
   }
 
   async function remove() {
     if (!editId) return
     await deleteTransaction(editId)
-    haptic(20)
+    hapticIfOn(20)
     navigate(-1)
   }
 
   const dateOptions = quickDates()
+  const isCustomDate = !dateOptions.some((d) => d.value === occurredOn)
 
   if (!loaded) return null
 
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col px-4 pb-8">
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      className="mx-auto flex min-h-full max-w-md flex-col px-4 pb-8"
+    >
       {/* Header */}
       <div className="safe-top flex items-center justify-between py-4">
         <h1 className="text-lg font-semibold">
@@ -130,23 +146,51 @@ export default function AddTransaction() {
 
       {/* Pametni unos */}
       {!editId && (
-        <div className="mb-4 flex items-center gap-2 rounded-2xl border border-[var(--color-line)] bg-[var(--color-brand-soft)] p-2 pl-3.5">
-          <Sparkles className="h-4 w-4 shrink-0 text-[var(--color-brand)]" />
-          <input
-            value={smart}
-            onChange={(e) => setSmart(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && smart && applySmart()}
-            placeholder={'Npr. „kafa 250" ili „juče 3000 patike"'}
-            className="min-w-0 flex-1 bg-transparent text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] focus:outline-none"
-          />
-          <button
-            type="button"
-            disabled={!smart}
-            onClick={applySmart}
-            className="brand-bg shrink-0 rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white disabled:opacity-40"
-          >
-            Popuni
-          </button>
+        <div className="mb-4">
+          <div className="flex items-center gap-2 rounded-2xl border border-[var(--color-line)] bg-[var(--color-brand-soft)] p-2 pl-3.5">
+            <Sparkles className="h-4 w-4 shrink-0 text-[var(--color-brand)]" />
+            <input
+              value={smart}
+              onChange={(e) => setSmart(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && smart && applySmart()}
+              placeholder={'Npr. „kafa 250" ili „juče 3000 patike"'}
+              className="min-w-0 flex-1 bg-transparent text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] focus:outline-none"
+            />
+            {voice.supported && (
+              <motion.button
+                type="button"
+                onClick={() => (voice.recording ? voice.stop() : voice.start())}
+                disabled={voice.transcribing}
+                aria-label={voice.recording ? 'Zaustavi snimanje' : 'Reci naglas'}
+                animate={voice.recording ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+                transition={voice.recording ? { repeat: Infinity, duration: 1.1 } : undefined}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-[var(--shadow-card)]"
+                style={{
+                  background: voice.recording ? 'var(--color-expense)' : 'var(--color-brand)',
+                  color: '#fff',
+                }}
+              >
+                {voice.transcribing ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
+              </motion.button>
+            )}
+            <button
+              type="button"
+              disabled={!smart}
+              onClick={() => applySmart()}
+              className="brand-bg shrink-0 rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white disabled:opacity-40"
+            >
+              Popuni
+            </button>
+          </div>
+          {(voice.recording || voice.transcribing) && (
+            <p className="mt-1.5 px-1 text-[12px] font-medium text-[var(--color-ink-muted)]">
+              {voice.recording ? '🎙️ Snimam… tapni mikrofon da završiš' : 'Prepisujem…'}
+            </p>
+          )}
         </div>
       )}
 
@@ -181,7 +225,7 @@ export default function AddTransaction() {
             }}
           />
         </div>
-        <p className="mt-1 text-sm font-medium text-[var(--color-ink-muted)]">dinara</p>
+        <p className="mt-1 text-sm font-medium text-[var(--color-ink-muted)]">{currencySymbol()}</p>
       </div>
 
       {/* Kategorije */}
@@ -195,7 +239,7 @@ export default function AddTransaction() {
               type="button"
               onClick={() => {
                 setCategoryId(c.id)
-                haptic(6)
+                hapticIfOn(6)
               }}
               className="flex flex-col items-center gap-1.5 rounded-2xl border p-2 transition-all active:scale-95"
               style={{
@@ -238,13 +282,26 @@ export default function AddTransaction() {
             {d.label}
           </button>
         ))}
-        <input
-          type="date"
-          value={occurredOn}
-          max={today()}
-          onChange={(e) => e.target.value && setOccurredOn(e.target.value)}
-          className="rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-[13px] text-[var(--color-ink)]"
-        />
+        {/* Custom datum — pill sa kalendar ikonicom otvara nativni birač */}
+        <label
+          className="relative flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors"
+          style={{
+            borderColor: isCustomDate ? 'var(--color-brand)' : 'var(--color-line)',
+            background: isCustomDate ? 'var(--color-brand-soft)' : 'var(--color-surface)',
+            color: isCustomDate ? 'var(--color-brand)' : 'var(--color-ink)',
+          }}
+        >
+          <CalendarDays className="h-4 w-4" />
+          {isCustomDate ? formatDayShort(occurredOn) : 'Drugi datum'}
+          <input
+            type="date"
+            value={occurredOn}
+            max={today()}
+            onChange={(e) => e.target.value && setOccurredOn(e.target.value)}
+            aria-label="Izaberi datum"
+            className="absolute inset-0 cursor-pointer opacity-0"
+          />
+        </label>
       </div>
 
       {/* Opis */}
@@ -278,7 +335,7 @@ export default function AddTransaction() {
           {editId ? 'Sačuvaj izmene' : 'Sačuvaj'}
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

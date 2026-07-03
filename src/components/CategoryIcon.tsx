@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Dumbbell,
   Wallet,
+  Briefcase,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -41,6 +42,7 @@ const MAP: Record<string, LucideIcon> = {
   ShoppingCart,
   Dumbbell,
   Wallet,
+  Briefcase,
 }
 
 /** Sve dostupne ikonice za biranje pri kreiranju kategorije. */

@@ -1,4 +1,5 @@
 import { db, LOCAL_USER, newId } from './db'
+import { enqueue, flushNow } from './sync'
 import { toDay, parseDay, monthKey } from './format'
 import type { RecurringItem, Transaction } from './types'
 
@@ -83,16 +84,29 @@ export function computeReminders(
 export async function addRecurring(
   input: Omit<RecurringItem, 'id' | 'userId'>,
 ): Promise<void> {
-  await db.recurringItems.put({ ...input, id: newId(), userId: LOCAL_USER })
+  const id = newId()
+  await db.transaction('rw', db.recurringItems, db.outbox, async () => {
+    await db.recurringItems.put({ ...input, id, userId: LOCAL_USER })
+    await enqueue('recurring_items', 'upsert', id)
+  })
+  flushNow()
 }
 
 export async function updateRecurring(
   id: string,
   patch: Partial<RecurringItem>,
 ): Promise<void> {
-  await db.recurringItems.update(id, patch)
+  await db.transaction('rw', db.recurringItems, db.outbox, async () => {
+    await db.recurringItems.update(id, patch)
+    await enqueue('recurring_items', 'upsert', id)
+  })
+  flushNow()
 }
 
 export async function deleteRecurring(id: string): Promise<void> {
-  await db.recurringItems.delete(id)
+  await db.transaction('rw', db.recurringItems, db.outbox, async () => {
+    await db.recurringItems.delete(id)
+    await enqueue('recurring_items', 'delete', id)
+  })
+  flushNow()
 }

@@ -307,7 +307,7 @@ function DonutTooltip({ active, payload }: ChartTooltipProps) {
   const p = payload[0]
   const slice = p.payload as { category?: { name: string }; total: number; pct: number }
   return (
-    <div className="rounded-lg border border-[var(--color-line)] bg-white px-2.5 py-1.5 text-[12px] shadow-lg">
+    <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-2.5 py-1.5 text-[12px] shadow-lg">
       <p className="font-semibold">{slice.category?.name ?? 'Ostalo'}</p>
       <p className="tnum text-[var(--color-ink-muted)]">
         {formatRsd(slice.total)} · {Math.round(slice.pct)}%
@@ -319,7 +319,7 @@ function DonutTooltip({ active, payload }: ChartTooltipProps) {
 function TrendTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg border border-[var(--color-line)] bg-white px-2.5 py-1.5 text-[12px] shadow-lg">
+    <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] px-2.5 py-1.5 text-[12px] shadow-lg">
       <p className="mb-1 font-semibold">{formatMonthLabel(String(label))}</p>
       {payload.map((p) => (
         <p key={p.dataKey} className="tnum" style={{ color: p.color }}>

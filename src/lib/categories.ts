@@ -19,7 +19,7 @@ export const SEED_CATEGORIES: SeedCat[] = [
   { id: 'inc-fiksno', name: 'Fiksna uplata', type: 'income', incomeKind: 'fixed', icon: 'Banknote', color: '#06B6D4', isActive: true, sort: 120 },
 
   // ----- Prihodi: zarada sa strane -----
-  { id: 'inc-konoba', name: 'Konobarisanje', type: 'income', incomeKind: 'extra', icon: 'Coffee', color: '#16A34A', isActive: true, sort: 210 },
+  { id: 'inc-konoba', name: 'Honorar / sa strane', type: 'income', incomeKind: 'extra', icon: 'Briefcase', color: '#16A34A', isActive: true, sort: 210 },
   { id: 'inc-poslovi', name: 'Sitni poslovi', type: 'income', incomeKind: 'extra', icon: 'Wrench', color: '#0EA5E9', isActive: true, sort: 220 },
   { id: 'inc-prodaja', name: 'Prodaja stvari', type: 'income', incomeKind: 'extra', icon: 'Tag', color: '#22C55E', isActive: true, sort: 230 },
   { id: 'inc-porodica', name: 'Poklon / od porodice', type: 'income', incomeKind: 'extra', icon: 'HeartHandshake', color: '#A855F7', isActive: true, sort: 240 },

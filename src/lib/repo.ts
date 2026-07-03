@@ -1,4 +1,5 @@
 import { db, LOCAL_USER, newId } from './db'
+import { enqueue, flushNow } from './sync'
 import { today, monthKey } from './format'
 import type {
   Category,
@@ -8,6 +9,7 @@ import type {
   Profile,
   SavingsGoal,
   SavingsEntry,
+  SavingsMode,
 } from './types'
 
 export const GOAL_ID = 'goal'
@@ -35,8 +37,13 @@ export async function addTransaction(input: NewTxInput): Promise<Transaction> {
     occurredOn: input.occurredOn || today(),
     createdAt: new Date().toISOString(),
   }
-  await db.transactions.put(tx)
-  await bumpStreak()
+  await db.transaction('rw', db.transactions, db.profile, db.savingsGoals, db.savingsEntries, db.outbox, async () => {
+    await db.transactions.put(tx)
+    await enqueue('transactions', 'upsert', tx.id)
+    await bumpStreak()
+    if (tx.type === 'income') await autoSaveOnIncome(tx)
+  })
+  flushNow()
   return tx
 }
 
@@ -45,26 +52,48 @@ export async function updateTransaction(
   patch: Partial<Omit<Transaction, 'id' | 'userId' | 'createdAt'>>,
 ): Promise<void> {
   if (patch.amount != null) patch.amount = Math.round(Math.abs(patch.amount))
-  await db.transactions.update(id, patch)
+  await db.transaction('rw', db.transactions, db.outbox, async () => {
+    await db.transactions.update(id, patch)
+    await enqueue('transactions', 'upsert', id)
+  })
+  flushNow()
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
-  await db.transactions.delete(id)
+  await db.transaction('rw', db.transactions, db.outbox, async () => {
+    await db.transactions.delete(id)
+    await enqueue('transactions', 'delete', id)
+  })
+  flushNow()
 }
 
 // ---------- Profil ----------
 
 export async function updateProfile(patch: Partial<Profile>): Promise<void> {
-  const p = await db.profile.get(LOCAL_USER)
-  if (!p) return
-  await db.profile.put({ ...p, ...patch })
+  await db.transaction('rw', db.profile, db.outbox, async () => {
+    const p = await db.profile.get(LOCAL_USER)
+    if (!p) return
+    await db.profile.put({ ...p, ...patch })
+    await enqueue('profiles', 'upsert', LOCAL_USER)
+  })
+  flushNow()
 }
 
 export async function setStartingBalance(amount: number): Promise<void> {
   await updateProfile({ startingBalance: Math.round(amount) })
 }
 
-/** Streak: uvećaj ako je prvi unos danas; resetuj ako je preskočen dan. */
+export async function adjustBalanceTo(realBalance: number): Promise<void> {
+  const profile = await db.profile.get(LOCAL_USER)
+  if (!profile) return
+  const txs = await db.transactions.toArray()
+  const currentBalance = computeBalance(profile.startingBalance, txs)
+  const diff = Math.round(realBalance) - currentBalance
+  await updateProfile({ startingBalance: profile.startingBalance + diff })
+}
+
+/** Streak: uvećaj ako je prvi unos danas; resetuj ako je preskočen dan.
+ *  Zove se unutar transakcije addTransaction (deli outbox enqueue). */
 async function bumpStreak(): Promise<void> {
   const p = await db.profile.get(LOCAL_USER)
   if (!p) return
@@ -83,6 +112,7 @@ async function bumpStreak(): Promise<void> {
     ...p,
     settings: { ...p.settings, streakCount: streak, lastEntryDate: t },
   })
+  await enqueue('profiles', 'upsert', LOCAL_USER)
 }
 
 function daysBetween(a: string, b: string): number {
@@ -96,20 +126,40 @@ function daysBetween(a: string, b: string): number {
 // ---------- Kategorije ----------
 
 export async function upsertCategory(cat: Category): Promise<void> {
-  await db.categories.put(cat)
+  await db.transaction('rw', db.categories, db.outbox, async () => {
+    await db.categories.put(cat)
+    await enqueue('categories', 'upsert', cat.id)
+  })
+  flushNow()
 }
 
 export async function setCategoryBudget(
   id: string,
   budget: number | null,
 ): Promise<void> {
-  await db.categories.update(id, {
-    monthlyBudget: budget == null ? null : Math.round(budget),
+  await db.transaction('rw', db.categories, db.outbox, async () => {
+    await db.categories.update(id, {
+      monthlyBudget: budget == null ? null : Math.round(budget),
+    })
+    await enqueue('categories', 'upsert', id)
   })
+  flushNow()
 }
 
 export async function deactivateCategory(id: string): Promise<void> {
-  await db.categories.update(id, { isActive: false })
+  await db.transaction('rw', db.categories, db.outbox, async () => {
+    await db.categories.update(id, { isActive: false })
+    await enqueue('categories', 'upsert', id)
+  })
+  flushNow()
+}
+
+export async function reactivateCategory(id: string): Promise<void> {
+  await db.transaction('rw', db.categories, db.outbox, async () => {
+    await db.categories.update(id, { isActive: true })
+    await enqueue('categories', 'upsert', id)
+  })
+  flushNow()
 }
 
 // ---------- Izvedene vrednosti ----------
@@ -148,18 +198,27 @@ export function computeTotals(
 // ---------- Štednja ----------
 
 export async function setSavingsGoal(
-  targetAmount: number,
+  mode: SavingsMode,
+  value: number,
+  targetAmount?: number,
   targetDate?: string | null,
 ): Promise<void> {
-  const existing = await db.savingsGoals.get(GOAL_ID)
-  const goal: SavingsGoal = {
-    id: GOAL_ID,
-    userId: LOCAL_USER,
-    targetAmount: Math.round(targetAmount),
-    targetDate: targetDate ?? null,
-    currentSaved: existing?.currentSaved ?? 0,
-  }
-  await db.savingsGoals.put(goal)
+  await db.transaction('rw', db.savingsGoals, db.outbox, async () => {
+    const existing = await db.savingsGoals.get(GOAL_ID)
+    const goal: SavingsGoal = {
+      id: GOAL_ID,
+      userId: LOCAL_USER,
+      targetAmount: targetAmount != null ? Math.round(targetAmount) : (existing?.targetAmount ?? 0),
+      targetDate: targetDate !== undefined ? (targetDate ?? null) : (existing?.targetDate ?? null),
+      currentSaved: existing?.currentSaved ?? 0,
+      mode,
+      rate: mode === 'percent' ? value : (existing?.rate ?? 0),
+      fixedAmount: mode === 'fixed' ? Math.round(value) : (existing?.fixedAmount ?? 0),
+    }
+    await db.savingsGoals.put(goal)
+    await enqueue('savings_goals', 'upsert', GOAL_ID)
+  })
+  flushNow()
 }
 
 export async function addToSavings(
@@ -167,7 +226,7 @@ export async function addToSavings(
   source: SavingsEntry['source'],
 ): Promise<void> {
   const amt = Math.round(amount)
-  if (amt === 0) return
+  if (amt <= 0) return
   const entry: SavingsEntry = {
     id: newId(),
     userId: LOCAL_USER,
@@ -175,22 +234,148 @@ export async function addToSavings(
     source,
     createdAt: new Date().toISOString(),
   }
-  await db.savingsEntries.put(entry)
+  await db.transaction('rw', db.savingsEntries, db.savingsGoals, db.profile, db.transactions, db.outbox, async () => {
+    const profile = await db.profile.get(LOCAL_USER)
+    if (!profile) return
+    const txs = await db.transactions.toArray()
+    const balance = computeBalance(profile.startingBalance, txs)
+    const goal = await db.savingsGoals.get(GOAL_ID)
+    const currentSaved = goal?.currentSaved ?? 0
+    const maxCanSave = Math.max(0, balance - currentSaved)
+    const clamped = Math.min(amt, maxCanSave)
+    if (clamped <= 0) return
+
+    entry.amount = clamped
+    await db.savingsEntries.put(entry)
+    await enqueue('savings_entries', 'upsert', entry.id)
+    if (goal) {
+      await db.savingsGoals.put({ ...goal, currentSaved: currentSaved + clamped })
+    } else {
+      await db.savingsGoals.put({
+        id: GOAL_ID, userId: LOCAL_USER,
+        targetAmount: 0, targetDate: null, currentSaved: clamped,
+        mode: 'percent', rate: 0, fixedAmount: 0,
+      })
+    }
+    await enqueue('savings_goals', 'upsert', GOAL_ID)
+  })
+  flushNow()
+}
+
+export async function withdrawFromSavings(amount: number): Promise<void> {
+  const amt = Math.round(amount)
+  if (amt <= 0) return
+  await db.transaction('rw', db.savingsEntries, db.savingsGoals, db.outbox, async () => {
+    const goal = await db.savingsGoals.get(GOAL_ID)
+    if (!goal || goal.currentSaved <= 0) return
+    const withdrawn = Math.min(amt, goal.currentSaved)
+    const entry: SavingsEntry = {
+      id: newId(), userId: LOCAL_USER,
+      amount: -withdrawn, source: 'withdraw',
+      createdAt: new Date().toISOString(),
+    }
+    await db.savingsEntries.put(entry)
+    await enqueue('savings_entries', 'upsert', entry.id)
+    await db.savingsGoals.put({ ...goal, currentSaved: goal.currentSaved - withdrawn })
+    await enqueue('savings_goals', 'upsert', GOAL_ID)
+  })
+  flushNow()
+}
+
+async function autoSaveOnIncome(tx: Transaction): Promise<void> {
   const goal = await db.savingsGoals.get(GOAL_ID)
-  if (goal) {
-    await db.savingsGoals.put({
-      ...goal,
-      currentSaved: Math.max(0, goal.currentSaved + amt),
-    })
+  if (!goal || (goal.mode === 'percent' && goal.rate <= 0) || (goal.mode === 'fixed' && goal.fixedAmount <= 0)) return
+
+  let contribution: number
+  if (goal.mode === 'percent') {
+    contribution = Math.round(tx.amount * goal.rate)
   } else {
-    // Bez postavljenog cilja i dalje pratimo ukupno ušteđeno.
-    await db.savingsGoals.put({
-      id: GOAL_ID,
-      userId: LOCAL_USER,
-      targetAmount: 0,
-      targetDate: null,
-      currentSaved: Math.max(0, amt),
-    })
+    const mk = tx.occurredOn.slice(0, 7)
+    const entries = await db.savingsEntries.toArray()
+    const savedThisMonth = entries
+      .filter((e) => e.source === 'auto' && e.createdAt.slice(0, 7) === mk)
+      .reduce((s, e) => s + e.amount, 0)
+    contribution = Math.max(0, goal.fixedAmount - savedThisMonth)
+  }
+  if (contribution <= 0) return
+
+  const profile = await db.profile.get(LOCAL_USER)
+  if (!profile) return
+  const txs = await db.transactions.toArray()
+  const balance = computeBalance(profile.startingBalance, txs)
+  const maxCanSave = Math.max(0, balance - goal.currentSaved)
+  const clamped = Math.min(contribution, maxCanSave)
+  if (clamped <= 0) return
+
+  const entry: SavingsEntry = {
+    id: newId(), userId: LOCAL_USER,
+    amount: clamped, source: 'auto',
+    createdAt: new Date().toISOString(),
+  }
+  await db.savingsEntries.put(entry)
+  await enqueue('savings_entries', 'upsert', entry.id)
+  await db.savingsGoals.put({ ...goal, currentSaved: goal.currentSaved + clamped })
+  await enqueue('savings_goals', 'upsert', GOAL_ID)
+}
+
+function computeBalance(startingBalance: number, txs: Transaction[]): number {
+  let balance = startingBalance
+  for (const t of txs) {
+    if (t.type === 'income') balance += t.amount
+    else balance -= t.amount
+  }
+  return balance
+}
+
+// ---------- Izvedeni novčani model ----------
+
+export interface MoneyState {
+  balance: number
+  savedTotal: number
+  availableToSpend: number
+  monthIncome: number
+  monthExpense: number
+  targetSaveThisMonth: number
+  savedThisMonth: number
+  onTrack: boolean
+}
+
+export function computeMoney(
+  startingBalance: number,
+  txs: Transaction[],
+  goal: SavingsGoal | undefined,
+  mk: string,
+): MoneyState {
+  let balance = startingBalance
+  let monthIncome = 0
+  let monthExpense = 0
+  for (const t of txs) {
+    if (t.type === 'income') balance += t.amount
+    else balance -= t.amount
+    if (t.occurredOn.startsWith(mk)) {
+      if (t.type === 'income') monthIncome += t.amount
+      else monthExpense += t.amount
+    }
+  }
+  const savedTotal = goal?.currentSaved ?? 0
+  const availableToSpend = balance - savedTotal
+
+  let targetSaveThisMonth = 0
+  if (goal) {
+    targetSaveThisMonth = goal.mode === 'percent'
+      ? Math.round(monthIncome * goal.rate)
+      : goal.fixedAmount
+  }
+
+  return {
+    balance,
+    savedTotal,
+    availableToSpend,
+    monthIncome,
+    monthExpense,
+    targetSaveThisMonth,
+    savedThisMonth: 0, // populated by hook with entries data
+    onTrack: (monthIncome - monthExpense) >= targetSaveThisMonth,
   }
 }
 
@@ -215,8 +400,7 @@ export function monthNet(txs: Transaction[], mk: string): number {
 export async function markLeftoverHandled(month: string): Promise<void> {
   const p = await db.profile.get(LOCAL_USER)
   if (!p) return
-  await db.profile.put({
-    ...p,
+  await updateProfile({
     settings: { ...p.settings, lastLeftoverHandledMonth: month },
   })
 }

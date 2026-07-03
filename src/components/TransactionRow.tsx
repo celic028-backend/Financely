@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { CategoryIcon } from './CategoryIcon'
 import { formatSigned, formatDayRelative } from '../lib/format'
 import type { Category, Transaction } from '../lib/types'
@@ -24,9 +25,10 @@ export function TransactionRow({
       : (category?.name ?? 'Trošak'))
 
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
+      whileTap={{ scale: 0.98 }}
       className="flex w-full items-center gap-3 py-2.5 text-left transition-colors active:bg-[var(--color-surface-2)]"
     >
       <span
@@ -57,6 +59,6 @@ export function TransactionRow({
       >
         {formatSigned(tx.amount, tx.type)}
       </span>
-    </button>
+    </motion.button>
   )
 }

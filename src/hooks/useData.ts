@@ -1,9 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../lib/db'
-import { computeTotals, GOAL_ID } from '../lib/repo'
+import { computeTotals, computeMoney, GOAL_ID, type MoneyState } from '../lib/repo'
 import { computeReminders, type Reminder } from '../lib/recurring'
 import { monthKey, today } from '../lib/format'
-import type { Category, RecurringItem, SavingsGoal, Transaction } from '../lib/types'
+import type { Category, RecurringItem, SavingsGoal, SavingsEntry, Transaction } from '../lib/types'
 
 export function useProfile() {
   return useLiveQuery(() => db.profile.toArray().then((r) => r[0]))
@@ -58,6 +58,24 @@ export function useRecurring(): RecurringItem[] | undefined {
 
 export function useSavingsGoal(): SavingsGoal | undefined {
   return useLiveQuery(() => db.savingsGoals.get(GOAL_ID))
+}
+
+export function useSavingsEntries(): SavingsEntry[] | undefined {
+  return useLiveQuery(() => db.savingsEntries.toArray())
+}
+
+export function useMoney(): (MoneyState & { savedThisMonth: number }) | undefined {
+  const profile = useProfile()
+  const txs = useTransactions()
+  const goal = useSavingsGoal()
+  const entries = useSavingsEntries()
+  if (!profile || !txs) return undefined
+  const mk = monthKey(today())
+  const state = computeMoney(profile.startingBalance, txs, goal, mk)
+  const savedThisMonth = (entries ?? [])
+    .filter((e) => e.createdAt.slice(0, 7) === mk && e.amount > 0)
+    .reduce((s, e) => s + e.amount, 0)
+  return { ...state, savedThisMonth }
 }
 
 export function useReminders(): Reminder[] {

@@ -1,22 +1,34 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Settings2, Flame, ArrowDownRight, ArrowUpRight, Plus } from 'lucide-react'
-import { useCategoryMap, useProfile, useTotals, useTransactions } from '../hooks/useData'
+import { motion } from 'framer-motion'
+import { Flame, ArrowDownRight, ArrowUpRight, Plus, AlertTriangle, CalendarClock, PieChart, Bot } from 'lucide-react'
+import { useCategoryMap, useMoney, useProfile, useRecurring, useTotals, useTransactions } from '../hooks/useData'
 import { TransactionRow } from '../components/TransactionRow'
 import { SavingsCard } from '../components/SavingsCard'
 import { HomeReminders } from '../components/HomeReminders'
 import { LeftoverPrompt } from '../components/LeftoverPrompt'
-import { formatRsd, formatNumber, formatMonthLabel, today, monthKey } from '../lib/format'
+import { InstallHint } from '../components/InstallHint'
+import { BalanceSheet } from '../components/BalanceSheet'
+import { formatRsd, formatNumber, formatMonthLabel, currencySymbol, today, monthKey, parseDay } from '../lib/format'
+import { nextDueOnOrAfter } from '../lib/recurring'
+import { t } from '../lib/i18n'
 
 export default function Home() {
   const navigate = useNavigate()
   const profile = useProfile()
   const totals = useTotals()
+  const money = useMoney()
   const txs = useTransactions()
   const catMap = useCategoryMap()
+  const recurring = useRecurring()
+  const [balanceOpen, setBalanceOpen] = useState(false)
 
   const streak = profile?.settings.streakCount ?? 0
   const recent = (txs ?? []).slice(0, 6)
   const thisMonth = formatMonthLabel(monthKey(today()))
+  const nextPayment = getNextPayment(recurring)
+
+  if (!profile) return <HomeSkeleton />
 
   return (
     <div className="safe-top">
@@ -24,7 +36,9 @@ export default function Home() {
       <header className="flex items-center justify-between py-4">
         <div>
           <p className="text-sm text-[var(--color-ink-muted)]">{greeting()}</p>
-          <h1 className="text-xl font-bold brand-gradient">Financely</h1>
+          <h1 className="text-xl font-bold brand-gradient">
+            {profile.settings.displayName || 'Financely'}
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {streak > 0 && (
@@ -34,31 +48,65 @@ export default function Home() {
             </span>
           )}
           <Link
-            to="/podesavanja"
-            aria-label="Podešavanja"
+            to="/analitika"
+            aria-label="Analitika"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] active:scale-90"
           >
-            <Settings2 className="h-[18px] w-[18px]" />
+            <PieChart className="h-[18px] w-[18px]" />
+          </Link>
+          <Link
+            to="/ai"
+            aria-label="Asistent"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] active:scale-90"
+          >
+            <Bot className="h-[18px] w-[18px]" />
           </Link>
         </div>
       </header>
 
-      {/* Hero: ukupno stanje */}
-      <section className="brand-bg relative overflow-hidden rounded-[var(--radius-2xl)] p-5 text-white shadow-[var(--shadow-float)]">
+      {/* Hero: dostupno za trošenje */}
+      <motion.section
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="brand-bg relative cursor-pointer overflow-hidden rounded-[var(--radius-2xl)] p-5 text-white shadow-[var(--shadow-float)] active:scale-[0.98]"
+        onClick={() => setBalanceOpen(true)}
+      >
         <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute -bottom-12 -left-6 h-32 w-32 rounded-full bg-white/10" />
-        <p className="text-[13px] font-medium text-white/80">Ukupno stanje</p>
+        <p className="text-[13px] font-medium text-white/80">{t('home.available')}</p>
         <p className="tnum mt-1 text-[38px] font-bold leading-none">
-          {totals ? formatRsd(totals.balance) : '—'}
+          {money ? formatRsd(money.availableToSpend) : '—'}
         </p>
+      </motion.section>
 
-        <div className="mt-5 flex items-center gap-3">
-          <MonthPill
-            label="Ovog meseca ostalo"
-            value={totals ? formatRsd(totals.monthLeftover) : '—'}
-          />
+      <BalanceSheet
+        currentBalance={money?.balance ?? 0}
+        open={balanceOpen}
+        onClose={() => setBalanceOpen(false)}
+      />
+
+      {/* Hint: sledeća uplata + onTrack warning */}
+      {(nextPayment || (money && !money.onTrack && money.targetSaveThisMonth > 0)) && (
+        <div className="mt-2 space-y-1.5">
+          {nextPayment && (
+            <div className="flex items-center gap-2 rounded-2xl bg-[var(--color-income-soft)] px-3.5 py-2">
+              <CalendarClock className="h-4 w-4 text-[var(--color-income)]" />
+              <p className="text-[12px] font-medium text-[var(--color-income)]">
+                Sledeća uplata: {nextPayment.name} · za {nextPayment.days} {nextPayment.days === 1 ? 'dan' : 'dana'}
+              </p>
+            </div>
+          )}
+          {money && !money.onTrack && money.targetSaveThisMonth > 0 && (
+            <div className="flex items-center gap-2 rounded-2xl bg-[var(--color-warn-soft)] px-3.5 py-2">
+              <AlertTriangle className="h-4 w-4 text-[var(--color-warn)]" />
+              <p className="text-[12px] font-medium text-[var(--color-warn)]">
+                {t('home.overspend')}
+              </p>
+            </div>
+          )}
         </div>
-      </section>
+      )}
 
       {/* Višak prošlog meseca */}
       <LeftoverPrompt />
@@ -68,13 +116,13 @@ export default function Home() {
         <MiniStat
           tone="income"
           icon={<ArrowUpRight className="h-4 w-4" />}
-          label={`Prihod · ${thisMonth}`}
+          label={`${t('home.income')} · ${thisMonth}`}
           value={totals ? formatNumber(totals.monthIncome) : '—'}
         />
         <MiniStat
           tone="expense"
           icon={<ArrowDownRight className="h-4 w-4" />}
-          label={`Trošak · ${thisMonth}`}
+          label={`${t('home.expense')} · ${thisMonth}`}
           value={totals ? formatNumber(totals.monthExpense) : '—'}
         />
       </section>
@@ -87,13 +135,16 @@ export default function Home() {
         <SavingsCard />
       </div>
 
+      {/* PWA install hint */}
+      <InstallHint />
+
       {/* Poslednje transakcije */}
       <section className="mt-5">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold">Poslednje</h2>
+          <h2 className="text-[15px] font-semibold">{t('home.recent')}</h2>
           {recent.length > 0 && (
             <Link to="/istorija" className="text-[13px] font-medium text-[var(--color-brand)]">
-              Sve
+              {t('home.all')}
             </Link>
           )}
         </div>
@@ -113,15 +164,6 @@ export default function Home() {
           </div>
         )}
       </section>
-    </div>
-  )
-}
-
-function MonthPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-white/15 px-3.5 py-2 backdrop-blur-sm">
-      <p className="text-[11px] font-medium text-white/75">{label}</p>
-      <p className="tnum text-[17px] font-bold leading-tight">{value}</p>
     </div>
   )
 }
@@ -153,7 +195,7 @@ function MiniStat({
         </span>
       </div>
       <p className="tnum mt-2 text-[20px] font-bold" style={{ color }}>
-        {value} <span className="text-[13px] font-medium">din</span>
+        {value} <span className="text-[13px] font-medium">{currencySymbol()}</span>
       </p>
     </div>
   )
@@ -182,10 +224,45 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   )
 }
 
+function HomeSkeleton() {
+  const shimmer = 'animate-pulse rounded-xl bg-[var(--color-surface-2)]'
+  return (
+    <div className="safe-top">
+      <header className="flex items-center justify-between py-4">
+        <div>
+          <div className={`${shimmer} mb-1.5 h-4 w-20`} />
+          <div className={`${shimmer} h-6 w-28`} />
+        </div>
+        <div className={`${shimmer} h-9 w-9 rounded-full`} />
+      </header>
+      <div className={`${shimmer} h-[160px] !rounded-[var(--radius-2xl)]`} />
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className={`${shimmer} h-[88px]`} />
+        <div className={`${shimmer} h-[88px]`} />
+      </div>
+      <div className={`${shimmer} mt-5 h-[200px]`} />
+    </div>
+  )
+}
+
+function getNextPayment(items: ReturnType<typeof useRecurring>): { name: string; days: number } | null {
+  if (!items || items.length === 0) return null
+  const t = today()
+  let best: { name: string; days: number } | null = null
+  for (const item of items) {
+    if (!item.active || item.kind !== 'income') continue
+    const due = nextDueOnOrAfter(item.schedule, t)
+    const days = Math.round((parseDay(due).getTime() - parseDay(t).getTime()) / 86400000)
+    if (days < 0) continue
+    if (!best || days < best.days) best = { name: item.name, days }
+  }
+  return best
+}
+
 function greeting(): string {
   const h = new Date().getHours()
-  if (h < 5) return 'Dobro veče'
-  if (h < 12) return 'Dobro jutro'
-  if (h < 18) return 'Dobar dan'
-  return 'Dobro veče'
+  if (h < 5) return t('greeting.evening')
+  if (h < 12) return t('greeting.morning')
+  if (h < 18) return t('greeting.day')
+  return t('greeting.evening')
 }

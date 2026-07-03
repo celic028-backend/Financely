@@ -167,7 +167,7 @@ function RecurringEditor({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="npr. Netflix, Stipendija, Kirija"
-          className="mb-3 w-full rounded-xl border border-[var(--color-line)] bg-white px-3 py-2.5 text-[14px] focus:border-[var(--color-brand)] focus:outline-none"
+          className="mb-3 w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] focus:border-[var(--color-brand)] focus:outline-none"
         />
 
         {/* Kategorija */}
@@ -205,7 +205,7 @@ function RecurringEditor({
             onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 9))}
             inputMode="numeric"
             placeholder="varira"
-            className="tnum w-40 rounded-xl border border-[var(--color-line)] bg-white px-3 py-2.5 text-[15px] font-semibold focus:border-[var(--color-brand)] focus:outline-none"
+            className="tnum w-40 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5 text-[15px] font-semibold focus:border-[var(--color-brand)] focus:outline-none"
           />
           <span className="text-[13px] text-[var(--color-ink-muted)]">din</span>
         </div>
@@ -230,7 +230,7 @@ function RecurringEditor({
               value={dayNum}
               onChange={(e) => setDayNum(e.target.value.replace(/\D/g, '').slice(0, 2))}
               inputMode="numeric"
-              className="tnum w-14 rounded-full border border-[var(--color-line)] bg-white px-3 py-1.5 text-center text-[13px]"
+              className="tnum w-14 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-center text-[13px]"
             />
           )}
           <button

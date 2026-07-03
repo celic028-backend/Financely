@@ -2,7 +2,7 @@ import { Sparkles } from 'lucide-react'
 import { useProfile, useTransactions } from '../hooks/useData'
 import { addToSavings, markLeftoverHandled, monthNet, previousMonthKey } from '../lib/repo'
 import { monthKey, today, formatMonthLabel, formatRsd } from '../lib/format'
-import { haptic } from '../lib/haptics'
+import { hapticIfOn } from '../lib/haptics'
 
 export function LeftoverPrompt() {
   const profile = useProfile()
@@ -19,11 +19,11 @@ export function LeftoverPrompt() {
   async function bank() {
     await addToSavings(leftover, 'monthly_leftover')
     await markLeftoverHandled(prevMk)
-    haptic([10, 30, 10])
+    hapticIfOn([10, 30, 10])
   }
   async function skip() {
     await markLeftoverHandled(prevMk)
-    haptic(10)
+    hapticIfOn(10)
   }
 
   return (
@@ -44,7 +44,7 @@ export function LeftoverPrompt() {
           <button
             type="button"
             onClick={bank}
-            className="flex-1 rounded-xl bg-white py-2.5 text-[14px] font-semibold text-[var(--color-income)] active:scale-[0.98]"
+            className="flex-1 rounded-xl bg-[var(--color-surface)] py-2.5 text-[14px] font-semibold text-[var(--color-income)] active:scale-[0.98]"
           >
             Prebaci u štednju
           </button>

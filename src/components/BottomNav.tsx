@@ -1,32 +1,38 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, PieChart, ReceiptText, Sparkles, Plus } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Home, ReceiptText, PiggyBank, Settings2, Plus } from 'lucide-react'
+import { t } from '../lib/i18n'
 
 const tabs = [
-  { to: '/', label: 'Početna', icon: Home, end: true },
-  { to: '/analitika', label: 'Analitika', icon: PieChart, end: false },
-  { to: '/istorija', label: 'Istorija', icon: ReceiptText, end: false },
-  { to: '/ai', label: 'Saveti', icon: Sparkles, end: false },
+  { to: '/', labelKey: 'nav.home', icon: Home, end: true },
+  { to: '/istorija', labelKey: 'nav.history', icon: ReceiptText, end: false },
+  { to: '/stednja', labelKey: 'nav.savings', icon: PiggyBank, end: false },
+  { to: '/podesavanja', labelKey: 'nav.settings', icon: Settings2, end: false },
 ]
 
 export function BottomNav() {
   const navigate = useNavigate()
 
   return (
-    <nav className="safe-bottom z-40 shrink-0 border-t border-[var(--color-line)] bg-white/85 backdrop-blur-xl">
+    <nav
+      className="safe-bottom z-40 shrink-0 border-t border-[var(--color-line)] backdrop-blur-xl"
+      style={{ backgroundColor: 'color-mix(in srgb, var(--color-surface) 85%, transparent)' }}
+    >
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
         <TabItem {...tabs[0]} />
         <TabItem {...tabs[1]} />
 
         {/* Centralno + dugme */}
         <div className="relative flex w-16 shrink-0 items-start justify-center">
-          <button
+          <motion.button
             type="button"
             aria-label="Dodaj transakciju"
             onClick={() => navigate('/dodaj')}
-            className="brand-bg -mt-5 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[var(--shadow-float)] transition-transform active:scale-90"
+            whileTap={{ scale: 0.88 }}
+            className="brand-bg -mt-5 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[var(--shadow-float)]"
           >
             <Plus className="h-7 w-7" strokeWidth={2.5} />
-          </button>
+          </motion.button>
         </div>
 
         <TabItem {...tabs[2]} />
@@ -38,15 +44,16 @@ export function BottomNav() {
 
 function TabItem({
   to,
-  label,
+  labelKey,
   icon: Icon,
   end,
 }: {
   to: string
-  label: string
+  labelKey: string
   icon: typeof Home
   end: boolean
 }) {
+  const label = t(labelKey)
   return (
     <NavLink
       to={to}

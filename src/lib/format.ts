@@ -1,15 +1,61 @@
-// ---------- Formatiranje iznosa i datuma (srpski, RSD) ----------
+// ---------- Formatiranje iznosa i datuma (valuta + jezik iz profila) ----------
 
-const nf = new Intl.NumberFormat('sr-RS', { maximumFractionDigits: 0 })
+type Lang = 'sr' | 'en'
+
+let lang: Lang = 'sr'
+let nf = new Intl.NumberFormat('sr-RS', { maximumFractionDigits: 0 })
+let symbol = 'din'
+
+/** Kratka oznaka valute (za iznose bez decimala). */
+const CURRENCY_SYMBOL: Record<string, string> = {
+  RSD: 'din',
+  EUR: '€',
+  USD: '$',
+  GBP: '£',
+  CHF: 'CHF',
+  BAM: 'KM',
+  MKD: 'ден',
+  RUB: '₽',
+  TRY: '₺',
+}
+
+const LOCALE_BCP: Record<Lang, string> = { sr: 'sr-RS', en: 'en-US' }
+
+/** Postavi jezik + valutu (App.tsx sinhronizuje iz profila pre rendera). */
+export function setMoneyFormat(locale: string, currency: string): void {
+  lang = locale === 'en' ? 'en' : 'sr'
+  try {
+    nf = new Intl.NumberFormat(LOCALE_BCP[lang], { maximumFractionDigits: 0 })
+  } catch {
+    /* nepodržan locale — ostavi prethodni */
+  }
+  symbol = CURRENCY_SYMBOL[currency] ?? currency
+}
+
+/** Trenutna kratka oznaka valute (za standalone labele). */
+export function currencySymbol(): string {
+  return symbol
+}
+
+/** Podržane valute za izbor u onboardingu/podešavanjima. */
+export const CURRENCIES: { code: string; label: string }[] = [
+  { code: 'RSD', label: 'RSD · Srpski dinar' },
+  { code: 'EUR', label: 'EUR · Evro' },
+  { code: 'USD', label: 'USD · Dolar' },
+  { code: 'GBP', label: 'GBP · Funta' },
+  { code: 'CHF', label: 'CHF · Franak' },
+  { code: 'BAM', label: 'BAM · KM' },
+  { code: 'MKD', label: 'MKD · Denar' },
+]
 
 /** 1234 -> "1.234" (bez oznake valute) */
 export function formatNumber(n: number): string {
   return nf.format(Math.round(n))
 }
 
-/** 1234 -> "1.234 din" */
+/** 1234 -> "1.234 din" (ili odgovarajuća valuta) */
 export function formatRsd(n: number): string {
-  return `${nf.format(Math.round(n))} din`
+  return `${nf.format(Math.round(n))} ${symbol}`
 }
 
 /** Sa predznakom: prihod +, trošak - */
@@ -18,22 +64,23 @@ export function formatSigned(n: number, type: 'income' | 'expense'): string {
   return `${sign}${formatRsd(Math.abs(n))}`
 }
 
-const MESECI = [
-  'januar',
-  'februar',
-  'mart',
-  'april',
-  'maj',
-  'jun',
-  'jul',
-  'avgust',
-  'septembar',
-  'oktobar',
-  'novembar',
-  'decembar',
+const MESECI_SR = [
+  'januar', 'februar', 'mart', 'april', 'maj', 'jun',
+  'jul', 'avgust', 'septembar', 'oktobar', 'novembar', 'decembar',
 ]
+const MESECI_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const DANI_SR = ['ned', 'pon', 'uto', 'sre', 'čet', 'pet', 'sub']
+const DANI_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const DANI = ['ned', 'pon', 'uto', 'sre', 'čet', 'pet', 'sub']
+function months(): string[] {
+  return lang === 'en' ? MESECI_EN : MESECI_SR
+}
+function days(): string[] {
+  return lang === 'en' ? DANI_EN : DANI_SR
+}
 
 /** '2026-07-01' -> Date (lokalno, bez pomeranja zone) */
 export function parseDay(day: string): Date {
@@ -56,13 +103,13 @@ export function today(): string {
 /** '2026-07-01' -> '1. jul 2026.' */
 export function formatDayLong(day: string): string {
   const d = parseDay(day)
-  return `${d.getDate()}. ${MESECI[d.getMonth()]} ${d.getFullYear()}.`
+  return `${d.getDate()}. ${months()[d.getMonth()]} ${d.getFullYear()}.`
 }
 
 /** '2026-07-01' -> 'čet, 1. jul' */
 export function formatDayShort(day: string): string {
   const d = parseDay(day)
-  return `${DANI[d.getDay()]}, ${d.getDate()}. ${MESECI[d.getMonth()]}`
+  return `${days()[d.getDay()]}, ${d.getDate()}. ${months()[d.getMonth()]}`
 }
 
 /** Prijateljski relativni datum: Danas / Juče / kratak datum */
@@ -74,16 +121,16 @@ export function formatDayRelative(day: string): string {
       new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) /
       86400000,
   )
-  if (diffDays === 0) return 'Danas'
-  if (diffDays === 1) return 'Juče'
-  if (diffDays === -1) return 'Sutra'
+  if (diffDays === 0) return lang === 'en' ? 'Today' : 'Danas'
+  if (diffDays === 1) return lang === 'en' ? 'Yesterday' : 'Juče'
+  if (diffDays === -1) return lang === 'en' ? 'Tomorrow' : 'Sutra'
   return formatDayShort(day)
 }
 
 /** '2026-07' -> 'jul 2026.' */
 export function formatMonthLabel(ym: string): string {
   const [y, m] = ym.split('-').map(Number)
-  return `${MESECI[m - 1]} ${y}.`
+  return `${months()[m - 1]} ${y}.`
 }
 
 export function monthKey(day: string): string {
