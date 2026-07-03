@@ -224,9 +224,10 @@ export async function setSavingsGoal(
 export async function addToSavings(
   amount: number,
   source: SavingsEntry['source'],
-): Promise<void> {
+): Promise<number> {
   const amt = Math.round(amount)
-  if (amt <= 0) return
+  if (amt <= 0) return 0
+  let saved = 0
   const entry: SavingsEntry = {
     id: newId(),
     userId: LOCAL_USER,
@@ -246,6 +247,7 @@ export async function addToSavings(
     if (clamped <= 0) return
 
     entry.amount = clamped
+    saved = clamped
     await db.savingsEntries.put(entry)
     await enqueue('savings_entries', 'upsert', entry.id)
     if (goal) {
@@ -260,6 +262,7 @@ export async function addToSavings(
     await enqueue('savings_goals', 'upsert', GOAL_ID)
   })
   flushNow()
+  return saved
 }
 
 export async function withdrawFromSavings(amount: number): Promise<void> {

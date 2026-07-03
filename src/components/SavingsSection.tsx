@@ -140,8 +140,10 @@ export function SavingsSection() {
           hint={money ? `Dostupno za trošenje: ${formatRsd(money.availableToSpend)}` : undefined}
           cta="Dodaj"
           tone="income"
+          max={money ? Math.max(0, money.availableToSpend) : 0}
           onSubmit={async (amt) => {
-            await addToSavings(amt, 'manual')
+            const saved = await addToSavings(amt, 'manual')
+            if (saved <= 0) return
             hapticIfOn([10, 30, 10])
             setPanel('none')
           }}
@@ -321,6 +323,7 @@ function AmountForm({
   const [busy, setBusy] = useState(false)
   const amt = parseInt(val || '0', 10)
   const tooMuch = max != null && amt > max
+  const noFunds = max != null && max <= 0
   const color = tone === 'income' ? 'var(--color-income)' : 'var(--color-expense)'
 
   async function submit() {
@@ -334,6 +337,14 @@ function AmountForm({
     <div className="mt-3 space-y-2 rounded-xl bg-[var(--color-surface-2)] p-3">
       <label className="block text-[13px] font-medium">{label}</label>
       {hint && <p className="text-[12px] text-[var(--color-ink-muted)]">{hint}</p>}
+      {noFunds && (
+        <div className="flex items-start gap-1.5 rounded-lg bg-[var(--color-expense-soft)] px-2.5 py-1.5">
+          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-expense)]" />
+          <p className="text-[11px] font-medium text-[var(--color-expense)]">
+            Nemaš dostupnih sredstava za štednju. Prvo unesi prihod ili uskladi stanje.
+          </p>
+        </div>
+      )}
       {warning && (
         <div className="flex items-start gap-1.5 rounded-lg bg-[var(--color-warn-soft)] px-2.5 py-1.5">
           <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-warn)]" />
