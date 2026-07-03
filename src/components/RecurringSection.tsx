@@ -8,8 +8,8 @@ import { t } from '../lib/i18n'
 import type { RecurringItem, RecurringKind, RecurringSchedule } from '../lib/types'
 
 function scheduleLabel(s: RecurringSchedule): string {
-  if (s === 'last_thursday' || s === 'last_day') return 'poslednji dan'
-  return `svakog ${s.split(':')[1]}. u mesecu`
+  if (s === 'last_thursday' || s === 'last_day') return t('recurring.lastDay')
+  return `${t('recurring.everyMonth')} ${s.split(':')[1]}. ${t('recurring.ofMonth')}`
 }
 
 export function RecurringSection() {
@@ -42,7 +42,7 @@ export function RecurringSection() {
                 <p className="truncate text-[14px] font-medium">{it.name}</p>
                 <p className="text-[12px] text-[var(--color-ink-muted)]">
                   {scheduleLabel(it.schedule)} ·{' '}
-                  {it.amount ? `${formatNumber(it.amount)} din` : 'promenljiv iznos'}
+                  {it.amount ? `${formatNumber(it.amount)} din` : t('recurring.variableAmount')}
                 </p>
               </div>
               <button

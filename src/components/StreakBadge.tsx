@@ -48,7 +48,7 @@ function streakEmoji(streak: number): string {
   return '🔥'
 }
 
-export function StreakBadge({ streak, lastEntryDate }: Props) {
+export function StreakBadge({ streak }: Props) {
   const [open, setOpen] = useState(false)
 
   if (streak <= 0) return null

@@ -4,6 +4,7 @@ import { Search, ReceiptText } from 'lucide-react'
 import { useCategoryMap, useTransactions } from '../hooks/useData'
 import { TransactionRow } from '../components/TransactionRow'
 import { formatMonthLabel, formatSigned, monthKey } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { Transaction, TxType } from '../lib/types'
 
 type Filter = 'all' | TxType
@@ -32,7 +33,7 @@ export default function History() {
   return (
     <div className="safe-top">
       <header className="py-4">
-        <h1 className="text-xl font-bold">Istorija</h1>
+        <h1 className="text-xl font-bold">{t('history.title')}</h1>
       </header>
 
       {/* Pretraga */}
@@ -41,7 +42,7 @@ export default function History() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Pretraži po opisu ili kategoriji"
+          placeholder={t('history.searchPlaceholder')}
           className="min-w-0 flex-1 bg-transparent text-[14px] placeholder:text-[var(--color-ink-faint)] focus:outline-none"
         />
       </div>
@@ -49,24 +50,24 @@ export default function History() {
       {/* Filter po tipu */}
       <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-[var(--color-surface-2)] p-1">
         <SegBtn active={filter === 'all'} onClick={() => setFilter('all')}>
-          Sve
+          {t('history.all')}
         </SegBtn>
         <SegBtn active={filter === 'expense'} onClick={() => setFilter('expense')} tone="expense">
-          Troškovi
+          {t('history.expenses')}
         </SegBtn>
         <SegBtn active={filter === 'income'} onClick={() => setFilter('income')} tone="income">
-          Prihodi
+          {t('history.incomes')}
         </SegBtn>
       </div>
 
       {filtered.length === 0 ? (
         <div className="card mt-6 flex flex-col items-center gap-2 px-6 py-10 text-center">
           <ReceiptText className="h-8 w-8 text-[var(--color-ink-faint)]" />
-          <p className="font-semibold">Nema transakcija</p>
+          <p className="font-semibold">{t('history.noResults')}</p>
           <p className="text-[13px] text-[var(--color-ink-muted)]">
             {q || filter !== 'all'
-              ? 'Nema rezultata za ovaj filter.'
-              : 'Kad dodaš prvu transakciju, pojaviće se ovde.'}
+              ? t('history.noFilter')
+              : t('history.empty')}
           </p>
         </div>
       ) : (

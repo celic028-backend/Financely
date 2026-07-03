@@ -3,6 +3,7 @@ import { useProfile, useTransactions } from '../hooks/useData'
 import { addToSavings, markLeftoverHandled, monthNet, previousMonthKey } from '../lib/repo'
 import { monthKey, today, formatMonthLabel, formatRsd } from '../lib/format'
 import { hapticIfOn } from '../lib/haptics'
+import { t } from '../lib/i18n'
 
 export function LeftoverPrompt() {
   const profile = useProfile()
@@ -33,10 +34,10 @@ export function LeftoverPrompt() {
           <Sparkles className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="text-[16px] font-bold leading-snug">
-              Bravo! {formatMonthLabel(prevMk)} ti je ostalo {formatRsd(leftover)}
+              {t('leftover.bravo')} {formatMonthLabel(prevMk)} {t('leftover.youHadLeft')} {formatRsd(leftover)}
             </p>
             <p className="mt-1 text-[13px] text-white/90">
-              Hoćeš da prebacimo taj višak u štednju ili da ga preneseš u ovaj mesec?
+              {t('leftover.question')}
             </p>
           </div>
         </div>
@@ -46,14 +47,14 @@ export function LeftoverPrompt() {
             onClick={bank}
             className="flex-1 rounded-xl bg-[var(--color-surface)] py-2.5 text-[14px] font-semibold text-[var(--color-income)] active:scale-[0.98]"
           >
-            Prebaci u štednju
+            {t('leftover.toSavings')}
           </button>
           <button
             type="button"
             onClick={skip}
             className="rounded-xl bg-white/20 px-4 py-2.5 text-[14px] font-semibold text-white active:scale-[0.98]"
           >
-            Prenesi
+            {t('leftover.carry')}
           </button>
         </div>
       </div>

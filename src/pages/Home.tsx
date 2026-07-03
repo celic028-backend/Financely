@@ -90,7 +90,7 @@ export default function Home() {
             <div className="flex items-center gap-2 rounded-2xl bg-[var(--color-income-soft)] px-3.5 py-2">
               <CalendarClock className="h-4 w-4 text-[var(--color-income)]" />
               <p className="text-[12px] font-medium text-[var(--color-income)]">
-                Sledeća uplata: {nextPayment.name} · za {nextPayment.days} {nextPayment.days === 1 ? 'dan' : 'dana'}
+                {t('home.nextPaymentLabel')}: {nextPayment.name} · {t('home.inDays')} {nextPayment.days} {nextPayment.days === 1 ? t('home.day') : t('home.days')}
               </p>
             </div>
           )}

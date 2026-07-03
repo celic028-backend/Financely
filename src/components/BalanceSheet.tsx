@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { X, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { adjustBalanceTo } from '../lib/repo'
-import { formatNumber, formatRsd } from '../lib/format'
+import { formatNumber, formatRsd, currencySymbol } from '../lib/format'
 import { hapticIfOn } from '../lib/haptics'
+import { t } from '../lib/i18n'
 
 interface Props {
   currentBalance: number
@@ -49,7 +50,7 @@ export function BalanceSheet({ currentBalance, open, onClose }: Props) {
             className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-3xl bg-[var(--color-surface)] p-6 shadow-2xl"
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-bold">Uskladi stanje</h2>
+              <h2 className="text-lg font-bold">{t('balance.title')}</h2>
               <button
                 type="button"
                 onClick={onClose}
@@ -60,12 +61,12 @@ export function BalanceSheet({ currentBalance, open, onClose }: Props) {
             </div>
 
             <p className="mb-1 text-[13px] text-[var(--color-ink-muted)]">
-              Trenutno stanje po aplikaciji
+              {t('balance.current')}
             </p>
             <p className="tnum mb-4 text-[22px] font-bold">{formatRsd(currentBalance)}</p>
 
             <label className="mb-2 block text-[13px] font-medium text-[var(--color-ink-muted)]">
-              Koliko zaista imaš? (keš + račun)
+              {t('balance.howMuch')}
             </label>
             <div className="mb-6 flex items-center gap-2">
               <input
@@ -76,7 +77,7 @@ export function BalanceSheet({ currentBalance, open, onClose }: Props) {
                 placeholder="0"
                 className="tnum w-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 text-[20px] font-bold focus:border-[var(--color-brand)] focus:outline-none"
               />
-              <span className="text-[14px] text-[var(--color-ink-muted)]">din</span>
+              <span className="text-[14px] text-[var(--color-ink-muted)]">{currencySymbol()}</span>
             </div>
 
             <button
@@ -86,7 +87,7 @@ export function BalanceSheet({ currentBalance, open, onClose }: Props) {
               className="brand-bg flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[15px] font-semibold text-white shadow-lg active:scale-[0.98] disabled:opacity-40"
             >
               <Check className="h-5 w-5" strokeWidth={2.5} />
-              Uskladi
+              {t('balance.adjust')}
             </button>
           </motion.div>
         </>

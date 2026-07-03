@@ -192,6 +192,105 @@ const DICT: Record<string, { sr: string; en: string }> = {
   'assistant.title': { sr: 'Asistent', en: 'Assistant' },
   'assistant.placeholder': { sr: 'Pitaj me nešto…', en: 'Ask me anything…' },
 
+  // Sledeća uplata
+  'home.nextPaymentLabel': { sr: 'Sledeća uplata', en: 'Next payment' },
+  'home.inDays': { sr: 'za', en: 'in' },
+
+  // Štednja kartica
+  'savings.saved': { sr: 'Ušteđeno', en: 'Saved' },
+  'savings.inSavings': { sr: 'U štednji', en: 'In savings' },
+  'savings.setGoal': { sr: 'Postavi cilj štednje', en: 'Set savings goal' },
+  'savings.setGoalDesc': {
+    sr: 'Odredi koliko želiš da uštediš pa prati napredak',
+    en: 'Decide how much to save and track progress',
+  },
+  'savings.of': { sr: 'od', en: 'of' },
+  'savings.setGoalHint': {
+    sr: 'Postavi cilj štednje (procenat ili fiksno)',
+    en: 'Set savings goal (percent or fixed)',
+  },
+  'savings.edit': { sr: 'Izmeni', en: 'Edit' },
+  'savings.set': { sr: 'Postavi', en: 'Set' },
+  'savings.autoPercent': { sr: 'Automatski odvajam', en: 'Auto-saving' },
+  'savings.ofEveryIncome': { sr: 'svakog priliva', en: 'of every income' },
+  'savings.autoFixed': { sr: 'Automatski odvajam', en: 'Auto-saving' },
+  'savings.monthly': { sr: 'mesečno', en: 'monthly' },
+  'savings.savedThisMonth': { sr: 'Ovog meseca ušteđeno', en: 'Saved this month' },
+  'savings.longTermGoal': { sr: 'Dugoročni cilj', en: 'Long-term goal' },
+  'savings.longTermOptional': { sr: 'Dugoročni cilj (opciono)', en: 'Long-term goal (optional)' },
+  'savings.by': { sr: 'do', en: 'by' },
+  'savings.addToSavings': { sr: 'Dodaj u štednju', en: 'Add to savings' },
+  'savings.withdraw': { sr: 'Podigni', en: 'Withdraw' },
+  'savings.addLabel': { sr: 'Koliko dodaješ u štednju?', en: 'How much to add to savings?' },
+  'savings.addHintPrefix': { sr: 'Dostupno za trošenje', en: 'Available to spend' },
+  'savings.addCta': { sr: 'Dodaj', en: 'Add' },
+  'savings.withdrawLabel': { sr: 'Koliko podižeš iz štednje?', en: 'How much to withdraw?' },
+  'savings.withdrawHintPrefix': { sr: 'U štednji', en: 'In savings' },
+  'savings.withdrawWarning': {
+    sr: 'Podizanjem vraćaš pare nazad u „dostupno za trošenje" i udaljavaš se od cilja.',
+    en: 'Withdrawing moves money back to "available to spend" and sets your goal back.',
+  },
+  'savings.withdrawCta': { sr: 'Podigni', en: 'Withdraw' },
+  'savings.noFunds': {
+    sr: 'Nemaš dostupnih sredstava za štednju. Prvo unesi prihod ili uskladi stanje.',
+    en: 'No funds available for saving. Add income or adjust your balance first.',
+  },
+  'savings.percentOfIncome': { sr: 'Procenat priliva', en: 'Percent of income' },
+  'savings.fixedMonthly': { sr: 'Fiksno mesečno', en: 'Fixed monthly' },
+  'savings.percentLabel': { sr: 'Koliko % svakog priliva da odvojim', en: 'What % of each income to save' },
+  'savings.fixedLabel': { sr: 'Fiksni iznos mesečno', en: 'Fixed amount monthly' },
+  'savings.saveGoal': { sr: 'Sačuvaj cilj', en: 'Save goal' },
+  'savings.history': { sr: 'Istorija', en: 'History' },
+  'savings.showLess': { sr: 'Prikaži manje', en: 'Show less' },
+  'savings.showAll': { sr: 'Prikaži sve', en: 'Show all' },
+  'savings.sourceAuto': { sr: 'Automatski', en: 'Automatic' },
+  'savings.sourceManual': { sr: 'Ručno dodato', en: 'Manually added' },
+  'savings.sourceLeftover': { sr: 'Mesečni višak', en: 'Monthly leftover' },
+  'savings.sourceWithdraw': { sr: 'Podignuto', en: 'Withdrawn' },
+
+  // Ponavljanja (schedule label)
+  'recurring.lastDay': { sr: 'poslednji dan', en: 'last day' },
+  'recurring.everyMonth': { sr: 'svakog', en: 'every' },
+  'recurring.ofMonth': { sr: 'u mesecu', en: 'of the month' },
+  'recurring.variableAmount': { sr: 'promenljiv iznos', en: 'variable amount' },
+
+  // Balance sheet
+  'balance.title': { sr: 'Uskladi stanje', en: 'Adjust balance' },
+  'balance.current': { sr: 'Trenutno stanje po aplikaciji', en: 'Current balance in app' },
+  'balance.howMuch': { sr: 'Koliko zaista imaš? (keš + račun)', en: 'How much do you really have? (cash + account)' },
+  'balance.adjust': { sr: 'Uskladi', en: 'Adjust' },
+
+  // Leftover prompt
+  'leftover.bravo': { sr: 'Bravo!', en: 'Great!' },
+  'leftover.youHadLeft': { sr: 'ti je ostalo', en: 'you had left' },
+  'leftover.question': {
+    sr: 'Hoćeš da prebacimo taj višak u štednju ili da ga preneseš u ovaj mesec?',
+    en: 'Want to move the surplus to savings or carry it over to this month?',
+  },
+  'leftover.toSavings': { sr: 'Prebaci u štednju', en: 'Move to savings' },
+  'leftover.carry': { sr: 'Prenesi', en: 'Carry over' },
+
+  // History
+  'history.searchPlaceholder': { sr: 'Pretraži po opisu ili kategoriji', en: 'Search by description or category' },
+  'history.all': { sr: 'Sve', en: 'All' },
+  'history.expenses': { sr: 'Troškovi', en: 'Expenses' },
+  'history.incomes': { sr: 'Prihodi', en: 'Income' },
+  'history.noFilter': { sr: 'Nema rezultata za ovaj filter.', en: 'No results for this filter.' },
+  'history.empty': { sr: 'Kad dodaš prvu transakciju, pojaviće se ovde.', en: 'When you add your first transaction, it will appear here.' },
+
+  // Assistant
+  'assistant.subtitle': { sr: 'Tvoj AI asistent · Claude', en: 'Your AI assistant · Claude' },
+  'assistant.askOrLog': { sr: 'Pitaj me ili reci šta si potrošio', en: 'Ask me or tell me what you spent' },
+  'assistant.conversation': { sr: 'Razgovor', en: 'Conversation' },
+  'assistant.inputPlaceholder': { sr: 'Napiši ili reci šta te zanima...', en: 'Type or say what you want to know...' },
+  'assistant.suggestion1': { sr: 'Potrošio sam 500 na kafu', en: 'I spent 500 on coffee' },
+  'assistant.suggestion2': { sr: 'Koliko imam?', en: 'How much do I have?' },
+  'assistant.suggestion3': { sr: 'Gde najviše trošim?', en: 'Where do I spend the most?' },
+  'assistant.suggestion4': { sr: 'Kako da uštedim?', en: 'How can I save more?' },
+  'assistant.confirm': { sr: 'Potvrdi', en: 'Confirm' },
+  'assistant.other': { sr: 'Ostalo', en: 'Other' },
+  'assistant.reanalyze': { sr: 'Analiziraj ponovo', en: 'Analyze again' },
+
   // Generičko
   'common.save': { sr: 'Sačuvaj', en: 'Save' },
   'common.cancel': { sr: 'Otkaži', en: 'Cancel' },

@@ -26,6 +26,7 @@ import {
   monthKey,
   today,
 } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { Category, Transaction, Profile } from '../lib/types'
 
 interface UiMsg {
@@ -183,10 +184,10 @@ export default function Assistant() {
   }
 
   const suggestions = [
-    'Potrošio sam 500 na kafu',
-    'Koliko imam?',
-    'Gde najviše trošim?',
-    'Kako da uštedim?',
+    t('assistant.suggestion1'),
+    t('assistant.suggestion2'),
+    t('assistant.suggestion3'),
+    t('assistant.suggestion4'),
   ]
 
   return (
@@ -196,8 +197,8 @@ export default function Assistant() {
           <Sparkles className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-xl font-bold">Asistent</h1>
-          <p className="text-[11px] text-[var(--color-ink-muted)]">Tvoj AI asistent · Claude</p>
+          <h1 className="text-xl font-bold">{t('assistant.title')}</h1>
+          <p className="text-[11px] text-[var(--color-ink-muted)]">{t('assistant.subtitle')}</p>
         </div>
       </header>
 
@@ -240,7 +241,7 @@ export default function Assistant() {
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] py-2.5 text-[13px] font-semibold text-[var(--color-brand)] active:scale-[0.99]"
           >
             <RefreshCw className="h-4 w-4" />
-            Analiziraj ponovo
+            {t('assistant.reanalyze')}
           </button>
         </section>
       )}
@@ -248,7 +249,7 @@ export default function Assistant() {
       {/* Chat */}
       <section className="flex flex-col pb-2">
         <h2 className="mb-2 text-[15px] font-semibold">
-          {messages.length === 0 ? 'Pitaj me ili reci šta si potrošio' : 'Razgovor'}
+          {messages.length === 0 ? t('assistant.askOrLog') : t('assistant.conversation')}
         </h2>
 
         <div ref={listRef} className="mb-3 space-y-2">
@@ -303,7 +304,7 @@ export default function Assistant() {
             <div className="flex justify-start">
               <div className="flex items-center gap-2 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3.5 py-2.5 text-[14px] text-[var(--color-ink-muted)]">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Razmišljam…
+                {t('nav.home') === 'Početna' ? 'Razmišljam…' : 'Thinking…'}
               </div>
             </div>
           )}
@@ -312,7 +313,7 @@ export default function Assistant() {
         {/* Status glasa */}
         {(voice.recording || voice.transcribing) && (
           <p className="mb-2 px-1 text-[13px] italic text-[var(--color-ink-faint)]">
-            {voice.recording ? 'Snimam… tapni mikrofon da završiš' : 'Prepisujem…'}
+            {voice.recording ? t('tx.recording') : t('tx.transcribing')}
           </p>
         )}
 
@@ -322,7 +323,7 @@ export default function Assistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && send()}
-            placeholder="Napiši ili reci šta te zanima…"
+            placeholder={t('assistant.inputPlaceholder')}
             className="min-w-0 flex-1 bg-transparent text-[14px] placeholder:text-[var(--color-ink-faint)] focus:outline-none"
           />
           {voice.supported && (
@@ -330,7 +331,7 @@ export default function Assistant() {
               type="button"
               onClick={() => (voice.recording ? voice.stop() : voice.start())}
               disabled={voice.transcribing}
-              aria-label={voice.recording ? 'Zaustavi snimanje' : 'Reci naglas'}
+              aria-label={voice.recording ? t('tx.stopRecording') : t('tx.speakIt')}
               animate={voice.recording ? { scale: [1, 1.12, 1] } : { scale: 1 }}
               transition={
                 voice.recording ? { repeat: Infinity, duration: 1.1 } : undefined
@@ -386,7 +387,7 @@ function ActionCard({
         animate={{ opacity: 1, y: 0 }}
         className="card mt-2 p-3.5"
       >
-        <p className="mb-2 text-[13px] font-semibold">Predlog budžeta:</p>
+        <p className="mb-2 text-[13px] font-semibold">{t('nav.home') === 'Početna' ? 'Predlog budžeta:' : 'Budget suggestion:'}</p>
         <div className="space-y-1.5">
           {action.suggestions.map((s) => (
             <div key={s.categoryId} className="flex items-center justify-between text-[13px]">
@@ -395,7 +396,7 @@ function ActionCard({
             </div>
           ))}
         </div>
-        <Outcome outcome={outcome} onConfirm={onConfirm} onCancel={onCancel} confirmLabel="Postavi budžete" />
+        <Outcome outcome={outcome} onConfirm={onConfirm} onCancel={onCancel} confirmLabel={t('nav.home') === 'Početna' ? 'Postavi budžete' : 'Set budgets'} />
       </motion.div>
     )
   }
@@ -416,7 +417,7 @@ function ActionCard({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-[14px] font-semibold">
-          {category?.name ?? 'Ostalo'}
+          {category?.name ?? t('assistant.other')}
           {a.description ? ` · ${a.description}` : ''}
         </p>
         <p className="text-[12px] text-[var(--color-ink-muted)]">
@@ -443,7 +444,7 @@ function Outcome({
   outcome,
   onConfirm,
   onCancel,
-  confirmLabel = 'Potvrdi',
+  confirmLabel,
   compact = false,
 }: {
   outcome?: 'done' | 'cancelled'
@@ -455,12 +456,12 @@ function Outcome({
   if (outcome === 'done') {
     return (
       <span className="flex items-center gap-1 text-[12px] font-semibold text-[var(--color-income)]">
-        <Check className="h-3.5 w-3.5" /> Dodato
+        <Check className="h-3.5 w-3.5" /> {t('nav.home') === 'Početna' ? 'Dodato' : 'Added'}
       </span>
     )
   }
   if (outcome === 'cancelled') {
-    return <span className="text-[12px] text-[var(--color-ink-faint)]">Otkazano</span>
+    return <span className="text-[12px] text-[var(--color-ink-faint)]">{t('common.cancel')}</span>
   }
   return (
     <div className={compact ? 'flex gap-1.5' : 'mt-3 flex gap-2'}>
@@ -474,7 +475,7 @@ function Outcome({
             : 'flex-1 rounded-xl bg-[var(--color-surface-2)] py-2 text-[13px] font-semibold text-[var(--color-ink-muted)] active:scale-[0.98]'
         }
       >
-        {compact ? <X className="h-4 w-4" /> : 'Otkaži'}
+        {compact ? <X className="h-4 w-4" /> : t('common.cancel')}
       </button>
       <button
         type="button"
@@ -486,7 +487,7 @@ function Outcome({
             : 'brand-bg flex-1 rounded-xl py-2 text-[13px] font-semibold text-white active:scale-[0.98]'
         }
       >
-        {compact ? <Check className="h-4 w-4" strokeWidth={2.5} /> : confirmLabel}
+        {compact ? <Check className="h-4 w-4" strokeWidth={2.5} /> : (confirmLabel || t('assistant.confirm'))}
       </button>
     </div>
   )

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { PiggyBank, ChevronRight } from 'lucide-react'
 import { useSavingsGoal } from '../hooks/useData'
 import { formatRsd, formatNumber } from '../lib/format'
+import { t } from '../lib/i18n'
 
 export function SavingsCard() {
   const goal = useSavingsGoal()
@@ -17,9 +18,9 @@ export function SavingsCard() {
           <PiggyBank className="h-5 w-5" />
         </span>
         <div className="flex-1">
-          <p className="text-[14px] font-semibold">Postavi cilj štednje</p>
+          <p className="text-[14px] font-semibold">{t('savings.setGoal')}</p>
           <p className="text-[12px] text-[var(--color-ink-muted)]">
-            Odredi koliko želiš da uštediš pa prati napredak
+            {t('savings.setGoalDesc')}
           </p>
         </div>
         <ChevronRight className="h-5 w-5 text-[var(--color-ink-faint)]" />
@@ -39,7 +40,7 @@ export function SavingsCard() {
           <PiggyBank className="h-5 w-5" />
         </span>
         <div className="flex-1">
-          <p className="text-[13px] text-[var(--color-ink-muted)]">Ušteđeno</p>
+          <p className="text-[13px] text-[var(--color-ink-muted)]">{t('savings.saved')}</p>
           <p className="tnum text-[20px] font-bold">{formatRsd(goal.currentSaved)}</p>
         </div>
         {hasTarget && (
@@ -48,7 +49,7 @@ export function SavingsCard() {
               {Math.round(pct)}%
             </p>
             <p className="text-[11px] text-[var(--color-ink-faint)]">
-              od {formatNumber(goal.targetAmount)}
+              {t('savings.of')} {formatNumber(goal.targetAmount)}
             </p>
           </div>
         )}

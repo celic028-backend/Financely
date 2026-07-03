@@ -19,6 +19,7 @@ import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 import { useCategoryMap, useTransactions, useAllCategories } from '../hooks/useData'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { formatRsd, formatNumber, formatMonthLabel } from '../lib/format'
+import { t } from '../lib/i18n'
 import {
   PERIODS,
   type Period,
@@ -62,7 +63,7 @@ export default function Analytics() {
   return (
     <div className="safe-top">
       <header className="py-4">
-        <h1 className="text-xl font-bold">Analitika</h1>
+        <h1 className="text-xl font-bold">{t('analytics.title')}</h1>
       </header>
 
       {/* Period */}
@@ -88,17 +89,17 @@ export default function Analytics() {
 
       {/* Prihod vs trošak */}
       <section className="mb-4 grid grid-cols-3 gap-3">
-        <SumCard tone="income" icon={<TrendingUp className="h-4 w-4" />} label="Prihod" value={totals.income} />
-        <SumCard tone="expense" icon={<TrendingDown className="h-4 w-4" />} label="Trošak" value={totals.expense} />
-        <SumCard tone="net" icon={<Wallet className="h-4 w-4" />} label="Ostaje" value={totals.net} />
+        <SumCard tone="income" icon={<TrendingUp className="h-4 w-4" />} label={t('home.income')} value={totals.income} />
+        <SumCard tone="expense" icon={<TrendingDown className="h-4 w-4" />} label={t('home.expense')} value={totals.expense} />
+        <SumCard tone="net" icon={<Wallet className="h-4 w-4" />} label={t('nav.home') === 'Početna' ? 'Ostaje' : 'Net'} value={totals.net} />
       </section>
 
       {/* Gde ide najviše */}
       <section className="card mb-4 p-4">
-        <h2 className="mb-1 text-[15px] font-semibold">Gde ti idu pare</h2>
+        <h2 className="mb-1 text-[15px] font-semibold">{t('nav.home') === 'Početna' ? 'Gde ti idu pare' : 'Where your money goes'}</h2>
         {expenseSlices.length === 0 ? (
           <p className="py-8 text-center text-[13px] text-[var(--color-ink-muted)]">
-            Nema troškova u ovom periodu.
+            {t('nav.home') === 'Početna' ? 'Nema troškova u ovom periodu.' : 'No expenses in this period.'}
           </p>
         ) : (
           <>
@@ -163,14 +164,14 @@ export default function Analytics() {
       {/* Podela prihoda */}
       {(split.fixed > 0 || split.extra > 0) && (
         <section className="card mb-4 p-4">
-          <h2 className="mb-3 text-[15px] font-semibold">Odakle ti prihodi</h2>
+          <h2 className="mb-3 text-[15px] font-semibold">{t('nav.home') === 'Početna' ? 'Odakle ti prihodi' : 'Income sources'}</h2>
           <SplitBar fixed={split.fixed} extra={split.extra} />
         </section>
       )}
 
       {/* Trend */}
       <section className="card mb-4 p-4">
-        <h2 className="mb-3 text-[15px] font-semibold">Trend (6 meseci)</h2>
+        <h2 className="mb-3 text-[15px] font-semibold">{t('nav.home') === 'Početna' ? 'Trend (6 meseci)' : 'Trend (6 months)'}</h2>
         <div className="h-40 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={trend} barGap={2} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
@@ -188,15 +189,15 @@ export default function Analytics() {
           </ResponsiveContainer>
         </div>
         <div className="mt-2 flex justify-center gap-4 text-[12px]">
-          <Legend color="#22C55E" label="Prihod" />
-          <Legend color="#F43F5E" label="Trošak" />
+          <Legend color="#22C55E" label={t('home.income')} />
+          <Legend color="#F43F5E" label={t('home.expense')} />
         </div>
       </section>
 
       {/* Budžet progress (tekući mesec) */}
       {budgeted.length > 0 && (
         <section className="card mb-4 p-4">
-          <h2 className="mb-3 text-[15px] font-semibold">Budžet ovog meseca</h2>
+          <h2 className="mb-3 text-[15px] font-semibold">{t('nav.home') === 'Početna' ? 'Budžet ovog meseca' : 'This month\'s budget'}</h2>
           <div className="space-y-3">
             {budgeted.map((c) => {
               const spent = spentByCat.get(c.id) ?? 0
@@ -272,14 +273,14 @@ function SplitBar({ fixed, extra }: { fixed: number; extra: number }) {
         <div className="rounded-xl bg-[var(--color-surface-2)] p-2.5">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'var(--color-brand)' }} />
-            <span className="text-[12px] text-[var(--color-ink-muted)]">Redovna primanja</span>
+            <span className="text-[12px] text-[var(--color-ink-muted)]">{t('tx.regularIncome')}</span>
           </div>
           <p className="tnum mt-1 text-[15px] font-bold">{formatRsd(fixed)}</p>
         </div>
         <div className="rounded-xl bg-[var(--color-surface-2)] p-2.5">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'var(--color-brand-2)' }} />
-            <span className="text-[12px] text-[var(--color-ink-muted)]">Zarada sa strane</span>
+            <span className="text-[12px] text-[var(--color-ink-muted)]">{t('tx.extraIncome')}</span>
           </div>
           <p className="tnum mt-1 text-[15px] font-bold">{formatRsd(extra)}</p>
         </div>
@@ -323,7 +324,7 @@ function TrendTooltip({ active, payload, label }: ChartTooltipProps) {
       <p className="mb-1 font-semibold">{formatMonthLabel(String(label))}</p>
       {payload.map((p) => (
         <p key={p.dataKey} className="tnum" style={{ color: p.color }}>
-          {p.dataKey === 'income' ? 'Prihod' : 'Trošak'}: {formatNumber(Number(p.value))}
+          {p.dataKey === 'income' ? t('home.income') : t('home.expense')}: {formatNumber(Number(p.value))}
         </p>
       ))}
     </div>

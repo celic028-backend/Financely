@@ -14,6 +14,7 @@ import { useSavingsGoal, useSavingsEntries, useMoney } from '../hooks/useData'
 import { setSavingsGoal, addToSavings, withdrawFromSavings } from '../lib/repo'
 import { formatNumber, formatRsd, formatDayRelative, formatDayLong, currencySymbol } from '../lib/format'
 import { hapticIfOn } from '../lib/haptics'
+import { t } from '../lib/i18n'
 import type { SavingsEntry, SavingsMode } from '../lib/types'
 
 type Panel = 'none' | 'goal' | 'add' | 'withdraw'
@@ -39,7 +40,7 @@ export function SavingsSection() {
           <PiggyBank className="h-5 w-5" />
         </span>
         <div className="flex-1">
-          <p className="text-[13px] text-[var(--color-ink-muted)]">U štednji</p>
+          <p className="text-[13px] text-[var(--color-ink-muted)]">{t('savings.inSavings')}</p>
           <p className="tnum text-[22px] font-bold">{formatRsd(savedTotal)}</p>
         </div>
       </div>
@@ -58,16 +59,16 @@ export function SavingsSection() {
         <span className="flex-1 text-[13px] font-medium">
           {hasRule ? (
             goal!.mode === 'percent' ? (
-              <>Automatski odvajam <b>{Math.round(goal!.rate * 100)}%</b> svakog priliva</>
+              <>{t('savings.autoPercent')} <b>{Math.round(goal!.rate * 100)}%</b> {t('savings.ofEveryIncome')}</>
             ) : (
-              <>Automatski odvajam <b>{formatRsd(goal!.fixedAmount)}</b> mesečno</>
+              <>{t('savings.autoFixed')} <b>{formatRsd(goal!.fixedAmount)}</b> {t('savings.monthly')}</>
             )
           ) : (
-            'Postavi cilj štednje (procenat ili fiksno)'
+            t('savings.setGoalHint')
           )}
         </span>
         <span className="text-[12px] font-semibold text-[var(--color-brand)]">
-          {hasRule ? 'Izmeni' : 'Postavi'}
+          {hasRule ? t('savings.edit') : t('savings.set')}
         </span>
       </button>
 
@@ -86,7 +87,7 @@ export function SavingsSection() {
       {hasRule && target > 0 && (
         <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-[12px]">
-            <span className="text-[var(--color-ink-muted)]">Ovog meseca ušteđeno</span>
+            <span className="text-[var(--color-ink-muted)]">{t('savings.savedThisMonth')}</span>
             <span className="tnum font-semibold">
               {formatNumber(savedThisMonth)} / {formatNumber(target)} {currencySymbol()}
             </span>
@@ -105,9 +106,9 @@ export function SavingsSection() {
         <div className="mt-4 flex items-center gap-2 rounded-xl border border-[var(--color-line)] px-3 py-2.5">
           <Target className="h-4 w-4 shrink-0 text-[var(--color-brand)]" />
           <span className="flex-1 text-[13px]">
-            Dugoročni cilj:{' '}
+            {t('savings.longTermGoal')}:{' '}
             <span className="font-semibold">{formatRsd(goal.targetAmount)}</span>
-            {goal.targetDate ? ` do ${formatDayLong(goal.targetDate)}` : ''}
+            {goal.targetDate ? ` ${t('savings.by')} ${formatDayLong(goal.targetDate)}` : ''}
           </span>
           <span className="tnum text-[12px] font-semibold text-[var(--color-brand)]">
             {Math.round(Math.min((savedTotal / goal.targetAmount) * 100, 100))}%
@@ -122,7 +123,7 @@ export function SavingsSection() {
           onClick={() => setPanel(panel === 'add' ? 'none' : 'add')}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-income-soft)] py-2.5 text-[14px] font-semibold text-[var(--color-income)] active:scale-[0.98]"
         >
-          <Plus className="h-4 w-4" /> Dodaj u štednju
+          <Plus className="h-4 w-4" /> {t('savings.addToSavings')}
         </button>
         <button
           type="button"
@@ -130,15 +131,15 @@ export function SavingsSection() {
           disabled={savedTotal <= 0}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[var(--color-line)] py-2.5 text-[14px] font-semibold text-[var(--color-ink)] active:scale-[0.98] disabled:opacity-40"
         >
-          <ArrowDownToLine className="h-4 w-4" /> Podigni
+          <ArrowDownToLine className="h-4 w-4" /> {t('savings.withdraw')}
         </button>
       </div>
 
       {panel === 'add' && (
         <AmountForm
-          label="Koliko dodaješ u štednju?"
-          hint={money ? `Dostupno za trošenje: ${formatRsd(money.availableToSpend)}` : undefined}
-          cta="Dodaj"
+          label={t('savings.addLabel')}
+          hint={money ? `${t('savings.addHintPrefix')}: ${formatRsd(money.availableToSpend)}` : undefined}
+          cta={t('savings.addCta')}
           tone="income"
           max={money ? Math.max(0, money.availableToSpend) : 0}
           onSubmit={async (amt) => {
@@ -152,10 +153,10 @@ export function SavingsSection() {
 
       {panel === 'withdraw' && (
         <AmountForm
-          label="Koliko podižeš iz štednje?"
-          hint={`U štednji: ${formatRsd(savedTotal)}`}
-          warning={'Podizanjem vraćaš pare nazad u „dostupno za trošenje" i udaljavaš se od cilja.'}
-          cta="Podigni"
+          label={t('savings.withdrawLabel')}
+          hint={`${t('savings.withdrawHintPrefix')}: ${formatRsd(savedTotal)}`}
+          warning={t('savings.withdrawWarning')}
+          cta={t('savings.withdrawCta')}
           tone="expense"
           max={savedTotal}
           onSubmit={async (amt) => {
@@ -218,7 +219,7 @@ function GoalEditor({
               color: mode === m ? 'var(--color-brand)' : 'var(--color-ink-muted)',
             }}
           >
-            {m === 'percent' ? 'Procenat priliva' : 'Fiksno mesečno'}
+            {m === 'percent' ? t('savings.percentOfIncome') : t('savings.fixedMonthly')}
           </button>
         ))}
       </div>
@@ -226,7 +227,7 @@ function GoalEditor({
       {mode === 'percent' ? (
         <div>
           <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">
-            Koliko % svakog priliva da odvojim
+            {t('savings.percentLabel')}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -242,7 +243,7 @@ function GoalEditor({
       ) : (
         <div>
           <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">
-            Fiksni iznos mesečno
+            {t('savings.fixedLabel')}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -260,7 +261,7 @@ function GoalEditor({
       {/* Dugoročni cilj (opciono) */}
       <div>
         <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">
-          Dugoročni cilj (opciono)
+          {t('savings.longTermOptional')}
         </label>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
@@ -288,14 +289,14 @@ function GoalEditor({
           onClick={save}
           className="brand-bg flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-[14px] font-semibold text-white active:scale-[0.98]"
         >
-          <Check className="h-4 w-4" /> Sačuvaj cilj
+          <Check className="h-4 w-4" /> {t('savings.saveGoal')}
         </button>
         <button
           type="button"
           onClick={onDone}
           className="rounded-xl bg-[var(--color-surface)] px-4 py-2.5 text-[14px] font-semibold text-[var(--color-ink-muted)]"
         >
-          Otkaži
+          {t('common.cancel')}
         </button>
       </div>
     </div>
@@ -341,7 +342,7 @@ function AmountForm({
         <div className="flex items-start gap-1.5 rounded-lg bg-[var(--color-expense-soft)] px-2.5 py-1.5">
           <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-expense)]" />
           <p className="text-[11px] font-medium text-[var(--color-expense)]">
-            Nemaš dostupnih sredstava za štednju. Prvo unesi prihod ili uskladi stanje.
+            {t('savings.noFunds')}
           </p>
         </div>
       )}
@@ -376,11 +377,14 @@ function AmountForm({
   )
 }
 
-const SOURCE_LABEL: Record<SavingsEntry['source'], string> = {
-  auto: 'Automatski',
-  manual: 'Ručno dodato',
-  monthly_leftover: 'Mesečni višak',
-  withdraw: 'Podignuto',
+function sourceLabel(source: SavingsEntry['source']): string {
+  const map: Record<SavingsEntry['source'], string> = {
+    auto: t('savings.sourceAuto'),
+    manual: t('savings.sourceManual'),
+    monthly_leftover: t('savings.sourceLeftover'),
+    withdraw: t('savings.sourceWithdraw'),
+  }
+  return map[source]
 }
 
 function EntryHistory({ entries }: { entries: SavingsEntry[] }) {
@@ -392,7 +396,7 @@ function EntryHistory({ entries }: { entries: SavingsEntry[] }) {
     <div className="mt-4 border-t border-[var(--color-line)] pt-3">
       <div className="mb-1 flex items-center gap-1.5 text-[var(--color-ink-muted)]">
         <History className="h-3.5 w-3.5" />
-        <span className="text-[12px] font-semibold uppercase tracking-wide">Istorija</span>
+        <span className="text-[12px] font-semibold uppercase tracking-wide">{t('savings.history')}</span>
       </div>
       <div className="divide-y divide-[var(--color-line)]">
         {shown.map((e) => {
@@ -400,7 +404,7 @@ function EntryHistory({ entries }: { entries: SavingsEntry[] }) {
           return (
             <div key={e.id} className="flex items-center justify-between py-2">
               <div>
-                <p className="text-[13px] font-medium">{SOURCE_LABEL[e.source]}</p>
+                <p className="text-[13px] font-medium">{sourceLabel(e.source)}</p>
                 <p className="text-[11px] text-[var(--color-ink-faint)]">
                   {formatDayRelative(e.createdAt.slice(0, 10))}
                 </p>
@@ -422,7 +426,7 @@ function EntryHistory({ entries }: { entries: SavingsEntry[] }) {
           onClick={() => setExpanded((v) => !v)}
           className="mt-1 w-full py-1.5 text-[12px] font-semibold text-[var(--color-brand)]"
         >
-          {expanded ? 'Prikaži manje' : `Prikaži sve (${sorted.length})`}
+          {expanded ? t('savings.showLess') : `${t('savings.showAll')} (${sorted.length})`}
         </button>
       )}
     </div>
