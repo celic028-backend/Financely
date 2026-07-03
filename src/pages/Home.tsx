@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Flame, ArrowDownRight, ArrowUpRight, Plus, AlertTriangle, CalendarClock, PieChart, ReceiptText } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Plus, AlertTriangle, CalendarClock, PieChart, ReceiptText } from 'lucide-react'
 import { useCategoryMap, useMoney, useProfile, useRecurring, useTotals, useTransactions } from '../hooks/useData'
 import { TransactionRow } from '../components/TransactionRow'
 import { SavingsCard } from '../components/SavingsCard'
@@ -10,6 +10,7 @@ import { LeftoverPrompt } from '../components/LeftoverPrompt'
 import { InstallHint } from '../components/InstallHint'
 import { NotificationPrompt } from '../components/NotificationPrompt'
 import { BalanceSheet } from '../components/BalanceSheet'
+import { StreakBadge } from '../components/StreakBadge'
 import { formatRsd, formatNumber, formatMonthLabel, currencySymbol, today, monthKey, parseDay } from '../lib/format'
 import { nextDueOnOrAfter } from '../lib/recurring'
 import { t } from '../lib/i18n'
@@ -42,12 +43,7 @@ export default function Home() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          {streak > 0 && (
-            <span className="flex items-center gap-1 rounded-full bg-[var(--color-warn-soft)] px-2.5 py-1 text-[13px] font-semibold text-[var(--color-warn)]">
-              <Flame className="h-3.5 w-3.5" />
-              {streak}
-            </span>
-          )}
+          <StreakBadge streak={streak} lastEntryDate={profile.settings.lastEntryDate} />
           <Link
             to="/analitika"
             aria-label="Analitika"
