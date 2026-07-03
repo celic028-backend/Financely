@@ -82,7 +82,7 @@ function daysAgo(n: number): string {
  */
 export function smartParseLocal(text: string, categories: Category[]): ParsedTx {
   const norm = normalize(text)
-  const { amount, rest } = extractAmount(text)
+  const { amount } = extractAmount(text)
   const { occurredOn } = extractDate(norm)
 
   const isIncome = INCOME_HINTS.some((h) => norm.includes(h))
@@ -99,18 +99,22 @@ export function smartParseLocal(text: string, categories: Category[]): ParsedTx 
     }
   }
 
+  // Nepoznata kategorija → "Ostalo" za troškove, prvi aktivni za prihod
+  if (!categoryId && amount != null) {
+    if (type === 'expense') {
+      categoryId = categories.find((c) => c.id === 'exp-ostalo' && c.isActive)?.id
+        ?? categories.find((c) => c.type === 'expense' && c.isActive)?.id
+        ?? null
+    } else {
+      categoryId = categories.find((c) => c.type === 'income' && c.isActive)?.id ?? null
+    }
+  }
+
   const incomeKind: IncomeKind | null = isIncome
     ? categoryId
       ? (categories.find((c) => c.id === categoryId)?.incomeKind ?? 'extra')
       : 'extra'
     : null
 
-  // Skini datumske reči iz opisa ("juče sam platio kafu" -> "sam platio kafu")
-  const description =
-    rest
-      .replace(/\b(prekju[cč]e|ju[cč]e|danas|pre\s+\d+\s+dana?)\b/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim() || null
-
-  return { amount, categoryId, type, incomeKind, description, occurredOn }
+  return { amount, categoryId, type, incomeKind, description: null, occurredOn }
 }

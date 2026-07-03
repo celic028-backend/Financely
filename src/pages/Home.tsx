@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Flame, ArrowDownRight, ArrowUpRight, Plus, AlertTriangle, CalendarClock, PieChart, Bot } from 'lucide-react'
+import { Flame, ArrowDownRight, ArrowUpRight, Plus, AlertTriangle, CalendarClock, PieChart, ReceiptText } from 'lucide-react'
 import { useCategoryMap, useMoney, useProfile, useRecurring, useTotals, useTransactions } from '../hooks/useData'
 import { TransactionRow } from '../components/TransactionRow'
 import { SavingsCard } from '../components/SavingsCard'
@@ -55,11 +55,11 @@ export default function Home() {
             <PieChart className="h-[18px] w-[18px]" />
           </Link>
           <Link
-            to="/ai"
-            aria-label="Asistent"
+            to="/istorija"
+            aria-label="Istorija"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] active:scale-90"
           >
-            <Bot className="h-[18px] w-[18px]" />
+            <ReceiptText className="h-[18px] w-[18px]" />
           </Link>
         </div>
       </header>

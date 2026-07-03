@@ -312,7 +312,7 @@ export default function Assistant() {
         {/* Status glasa */}
         {(voice.recording || voice.transcribing) && (
           <p className="mb-2 px-1 text-[13px] italic text-[var(--color-ink-faint)]">
-            {voice.recording ? '🎙️ Snimam… tapni mikrofon da završiš' : 'Prepisujem…'}
+            {voice.recording ? 'Snimam... tapni mikrofon da zavrsis' : 'Prepisujem...'}
           </p>
         )}
 

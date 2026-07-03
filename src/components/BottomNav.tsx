@@ -1,11 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, ReceiptText, PiggyBank, Settings2, Plus } from 'lucide-react'
+import { Home, Sparkles, PiggyBank, Settings2, Plus } from 'lucide-react'
 import { t } from '../lib/i18n'
 
 const tabs = [
   { to: '/', labelKey: 'nav.home', icon: Home, end: true },
-  { to: '/istorija', labelKey: 'nav.history', icon: ReceiptText, end: false },
+  { to: '/ai', labelKey: 'nav.assistant', icon: Sparkles, end: false },
   { to: '/stednja', labelKey: 'nav.savings', icon: PiggyBank, end: false },
   { to: '/podesavanja', labelKey: 'nav.settings', icon: Settings2, end: false },
 ]

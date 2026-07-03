@@ -20,7 +20,7 @@ const TOOLS = [
         amount: { type: 'integer', description: 'Iznos u dinarima, pozitivan ceo broj' },
         type: { type: 'string', enum: ['expense', 'income'] },
         category_id: { type: 'string', description: 'ID kategorije iz liste u kontekstu' },
-        description: { type: 'string', description: 'Kratak opis (opciono)' },
+        description: { type: 'string', description: 'Ostavi prazno. Ne postavljaj ovo polje.' },
         occurred_on: { type: 'string', description: 'Datum YYYY-MM-DD (opciono, danas ako se ne pominje)' },
       },
       required: ['amount', 'type', 'category_id'],
@@ -74,23 +74,25 @@ Deno.serve(async (req: Request) => {
 
     const today = new Date().toISOString().slice(0, 10);
 
-    const systemPrompt = `Ti si "Sve" — Financely AI asistent. Pametan, iskren i realan finansijski savetnik za mlade ljude u Srbiji.
+    const systemPrompt = `Ti si finansijski asistent u aplikaciji Financely. Profesionalan, konkretan, kratak.
 
-Današnji datum: ${today}
+Danasnji datum: ${today}
 
 Korisnikovi finansijski podaci:
 ${context}
 
 Pravila:
-- Govori srpski (latinica), opušteno ali stručno
-- Budi iskren — ako korisnik preteruje sa trošenjem, reci mu direktno ali sa podrškom
-- Daj konkretne savete sa brojevima (ne generičke)
-- Iznose uvek prikazuj u dinarima (npr. "12.500 din")
-- Budi kratak — max 3-4 rečenice osim ako korisnik traži detaljnije
-- Kada korisnik pominje da je nešto potrošio/platio/kupio/zaradio, pozovi add_transaction (za SVAKU pomenutu transakciju posebno). Uz alat uvek napiši i kratku potvrdu u tekstu. Aplikacija traži potvrdu od korisnika pre upisa.
-- Za relativne datume ("juče", "prekjuče") izračunaj tačan datum od današnjeg
-- Kada korisnik traži predlog budžeta, pozovi suggest_budgets sa realnim iznosima na osnovu potrošnje
-- Ne izmišljaj podatke koje nemaš`;
+- Govori srpski (latinica), profesionalno i kratko
+- Bez emojia, bez suvislih reci, samo sustina
+- Max 2-3 recenice po odgovoru
+- Iznose prikazuj u dinarima (npr. "12.500 din")
+- Odgovaraj ISKLJUCIVO na finansijska pitanja. Na sve ostalo odgovori "Mogu samo da ti pomognem oko finansija."
+- Kada korisnik pominje potrosnju/kupovinu/zaradu, pozovi add_transaction. NE POSTAVLJAJ description polje — ostavi ga prazno. Kategoriju biraj iz liste; ako nista ne odgovara, koristi "exp-ostalo" za troskove
+- Za svaku transakciju napisi kratku potvrdu (npr. "Dodajem 200 din u Hrana.")
+- Za relativne datume ("juce", "prekjuce") izracunaj tacan datum
+- Kada korisnik trazi predlog budzeta, pozovi suggest_budgets sa realnim iznosima
+- Ne izmisljaj podatke koje nemas
+- Budi direktan — ako korisnik preteruje sa trosenjem, reci mu to bez okolisanja`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
