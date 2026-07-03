@@ -156,6 +156,5 @@ function groupByMonth(txs: Transaction[]): MonthGroup[] {
     g.items.push(t)
     g.net += t.type === 'income' ? t.amount : -t.amount
   }
-  // Najnoviji mesec prvo (mapa je već u redosledu ubacivanja = sortirano desc)
-  return Array.from(map.values())
+  return Array.from(map.values()).sort((a, b) => b.key.localeCompare(a.key))
 }

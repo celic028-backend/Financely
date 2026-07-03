@@ -55,6 +55,7 @@ export function useVoice(onText: (text: string) => void): UseVoice {
   const [disabled, setDisabled] = useState(false) // server nije podešen (nema ključa)
   const recRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onTextRef = useRef(onText)
   onTextRef.current = onText
 
@@ -113,9 +114,11 @@ export function useVoice(onText: (text: string) => void): UseVoice {
     recRef.current = rec
     setRecording(true)
     rec.start()
+    timerRef.current = setTimeout(() => { recRef.current?.stop() }, 30_000)
   }, [disabled])
 
   const stop = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
     recRef.current?.stop()
   }, [])
 

@@ -37,8 +37,8 @@ export function localAnswer(
       if (amount <= totals.balance) {
         const msg =
           afterMonth >= 0
-            ? `Da, mozes. Imas ${formatRsd(totals.balance)} na stanju, posle toga bi ti ostalo ${formatRsd(afterMonth)} ovog meseca.`
-            : `Mozes tehnicki (imas ${formatRsd(totals.balance)}), ali ovog meseca bi otisao u minus ${formatRsd(Math.abs(afterMonth))}. Sacekaj sledecu uplatu ako nije hitno.`
+            ? `Da, možeš. Imaš ${formatRsd(totals.balance)} na stanju, posle toga bi ti ostalo ${formatRsd(afterMonth)} ovog meseca.`
+            : `Možeš tehnički (imaš ${formatRsd(totals.balance)}), ali ovog meseca bi otišao u minus ${formatRsd(Math.abs(afterMonth))}. Sačekaj sledeću uplatu ako nije hitno.`
         return msg
       }
       return `Iskreno — ne bih. To je ${formatRsd(amount)}, a na stanju imaš samo ${formatRsd(totals.balance)}. Sačekaj da se skupi ili nađi jeftiniju varijantu.`
@@ -75,5 +75,5 @@ export function localAnswer(
   }
 
   // Podrazumevani odgovor
-  return 'Pitaj me o finansijama — koliko imas, gde trosis, da li mozes nesto da priustis. Npr. „koliko sam potrosio na hranu?" ili „mogu li da priustim 10.000?"'
+  return 'Pitaj me o finansijama — koliko imaš, gde trošiš, da li možeš nešto da priuštiš. Npr. „koliko sam potrošio na hranu?" ili „mogu li da priuštim 10.000?"'
 }

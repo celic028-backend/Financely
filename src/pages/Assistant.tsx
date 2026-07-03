@@ -196,7 +196,7 @@ export default function Assistant() {
           <Sparkles className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-xl font-bold">Sve</h1>
+          <h1 className="text-xl font-bold">Asistent</h1>
           <p className="text-[11px] text-[var(--color-ink-muted)]">Tvoj AI asistent · Claude</p>
         </div>
       </header>
@@ -258,7 +258,7 @@ export default function Assistant() {
                 <button
                   key={s}
                   type="button"
-                  onClick={() => setInput(s)}
+                  onClick={() => void send(s)}
                   className="rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3.5 py-1.5 text-[13px] text-[var(--color-ink-muted)] active:scale-95"
                 >
                   {s}
@@ -312,7 +312,7 @@ export default function Assistant() {
         {/* Status glasa */}
         {(voice.recording || voice.transcribing) && (
           <p className="mb-2 px-1 text-[13px] italic text-[var(--color-ink-faint)]">
-            {voice.recording ? 'Snimam... tapni mikrofon da zavrsis' : 'Prepisujem...'}
+            {voice.recording ? 'Snimam… tapni mikrofon da završiš' : 'Prepisujem…'}
           </p>
         )}
 

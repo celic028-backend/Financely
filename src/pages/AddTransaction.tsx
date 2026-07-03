@@ -82,6 +82,11 @@ export default function AddTransaction() {
   const amountNum = parseInt(amount || '0', 10)
   const canSave = amountNum > 0 && !!categoryId && !saving
 
+  function goBack() {
+    if (window.history.length > 1) navigate(-1)
+    else navigate('/', { replace: true })
+  }
+
   async function save() {
     if (!canSave || !categoryId || saving) return
     setSaving(true)
@@ -107,14 +112,14 @@ export default function AddTransaction() {
       })
     }
     hapticIfOn([10, 30, 10])
-    navigate(-1)
+    goBack()
   }
 
   async function remove() {
-    if (!editId) return
+    if (!editId || !confirm('Obriši ovu transakciju?')) return
     await deleteTransaction(editId)
     hapticIfOn(20)
-    navigate(-1)
+    goBack()
   }
 
   const dateOptions = quickDates()
@@ -127,7 +132,7 @@ export default function AddTransaction() {
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto flex min-h-full max-w-md flex-col px-4 pb-8"
+      className="safe-bottom mx-auto flex min-h-full max-w-md flex-col px-4 pb-8"
     >
       {/* Header */}
       <div className="safe-top flex items-center justify-between py-4">
@@ -137,7 +142,7 @@ export default function AddTransaction() {
         <button
           type="button"
           aria-label="Zatvori"
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] active:scale-90"
         >
           <X className="h-5 w-5" />
@@ -188,7 +193,7 @@ export default function AddTransaction() {
           </div>
           {(voice.recording || voice.transcribing) && (
             <p className="mt-1.5 px-1 text-[12px] font-medium text-[var(--color-ink-muted)]">
-              {voice.recording ? '🎙️ Snimam… tapni mikrofon da završiš' : 'Prepisujem…'}
+              {voice.recording ? 'Snimam… tapni mikrofon da završiš' : 'Prepisujem…'}
             </p>
           )}
         </div>

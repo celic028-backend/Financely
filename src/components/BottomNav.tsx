@@ -16,7 +16,7 @@ export function BottomNav() {
   return (
     <nav
       className="safe-bottom z-40 shrink-0 border-t border-[var(--color-line)] backdrop-blur-xl"
-      style={{ backgroundColor: 'color-mix(in srgb, var(--color-surface) 85%, transparent)' }}
+      style={{ backgroundColor: 'var(--color-surface)' }}
     >
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
         <TabItem {...tabs[0]} />

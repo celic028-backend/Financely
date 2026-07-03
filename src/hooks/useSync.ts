@@ -19,7 +19,8 @@ export function useAutoSync() {
   const boundFor = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!user || boundFor.current === user.id) return
+    if (!user) { boundFor.current = null; return }
+    if (boundFor.current === user.id) return
     boundFor.current = user.id
     void bindUser(user.id)
   }, [user])

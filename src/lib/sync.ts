@@ -207,7 +207,9 @@ export async function pullFromSupabase(userId: string): Promise<boolean> {
       if (toPut.length) await (local as any).bulkPut(toPut)
 
       // Obriši lokalne kojih nema remote (osim onih koji tek čekaju slanje).
+      // Bezbednosna provera: ako server vrati 0 redova a lokalno imamo podatke, preskoči brisanje.
       const localRows = await local.toArray()
+      if (remoteIds.size === 0 && localRows.length > 0) continue
       const toDelete: string[] = []
       for (const row of localRows) {
         const id = (row as { id?: string; userId?: string }).id

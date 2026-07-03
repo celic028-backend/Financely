@@ -59,7 +59,7 @@ export default function Onboarding() {
   const canNext = step !== 0 || name.trim().length > 0
 
   return (
-    <div className="mx-auto flex h-[100dvh] max-w-md flex-col px-6">
+    <div className="safe-top mx-auto flex h-[100dvh] max-w-md flex-col px-6">
       <div className="flex flex-1 flex-col justify-center overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useSavingsGoal, useSavingsEntries, useMoney } from '../hooks/useData'
 import { setSavingsGoal, addToSavings, withdrawFromSavings } from '../lib/repo'
-import { formatNumber, formatRsd, formatDayRelative, currencySymbol } from '../lib/format'
+import { formatNumber, formatRsd, formatDayRelative, formatDayLong, currencySymbol } from '../lib/format'
 import { hapticIfOn } from '../lib/haptics'
 import type { SavingsEntry, SavingsMode } from '../lib/types'
 
@@ -107,7 +107,7 @@ export function SavingsSection() {
           <span className="flex-1 text-[13px]">
             Dugoročni cilj:{' '}
             <span className="font-semibold">{formatRsd(goal.targetAmount)}</span>
-            {goal.targetDate ? ` do ${goal.targetDate}` : ''}
+            {goal.targetDate ? ` do ${formatDayLong(goal.targetDate)}` : ''}
           </span>
           <span className="tnum text-[12px] font-semibold text-[var(--color-brand)]">
             {Math.round(Math.min((savedTotal / goal.targetAmount) * 100, 100))}%
