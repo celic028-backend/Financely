@@ -196,6 +196,16 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    if (kind === "test") {
+      await sendToUser(subs, {
+        title: "Financely radi!",
+        body: "Push obaveštenja su uspešno podešena.",
+        tag: "test",
+        url: "/",
+      });
+      sent++;
+    }
+
     if (kind === "monthly" && (p.notify_monthly ?? true)) {
       const prev = new Date(ty, tm - 2, 1);
       const prevKey = `${prev.getFullYear()}-${pad(prev.getMonth() + 1)}`;

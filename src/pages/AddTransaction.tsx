@@ -10,6 +10,7 @@ import { smartParseLocal } from '../lib/smartParse'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { hapticIfOn } from '../lib/haptics'
 import { formatNumber, currencySymbol, today, toDay, parseDay, formatDayShort } from '../lib/format'
+import { t as lang } from '../lib/i18n'
 import type { TxType } from '../lib/types'
 
 export default function AddTransaction() {
@@ -116,7 +117,7 @@ export default function AddTransaction() {
   }
 
   async function remove() {
-    if (!editId || !confirm('Obriši ovu transakciju?')) return
+    if (!editId || !confirm(lang('tx.deleteConfirm'))) return
     await deleteTransaction(editId)
     hapticIfOn(20)
     goBack()
@@ -137,11 +138,11 @@ export default function AddTransaction() {
       {/* Header */}
       <div className="safe-top flex items-center justify-between py-4">
         <h1 className="text-lg font-semibold">
-          {editId ? 'Izmeni transakciju' : 'Nova transakcija'}
+          {editId ? lang('tx.editTitle') : lang('tx.newTitle')}
         </h1>
         <button
           type="button"
-          aria-label="Zatvori"
+          aria-label={lang('tx.close')}
           onClick={goBack}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] active:scale-90"
         >
@@ -158,7 +159,7 @@ export default function AddTransaction() {
               value={smart}
               onChange={(e) => setSmart(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && smart && applySmart()}
-              placeholder={'Npr. „kafa 250" ili „juče 3000 patike"'}
+              placeholder={lang('tx.smartPlaceholder')}
               className="min-w-0 flex-1 bg-transparent text-[14px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] focus:outline-none"
             />
             {voice.supported && (
@@ -166,7 +167,7 @@ export default function AddTransaction() {
                 type="button"
                 onClick={() => (voice.recording ? voice.stop() : voice.start())}
                 disabled={voice.transcribing}
-                aria-label={voice.recording ? 'Zaustavi snimanje' : 'Reci naglas'}
+                aria-label={voice.recording ? lang('tx.stopRecording') : lang('tx.speakIt')}
                 animate={voice.recording ? { scale: [1, 1.12, 1] } : { scale: 1 }}
                 transition={voice.recording ? { repeat: Infinity, duration: 1.1 } : undefined}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-[var(--shadow-card)]"
@@ -188,12 +189,12 @@ export default function AddTransaction() {
               onClick={() => applySmart()}
               className="brand-bg shrink-0 rounded-xl px-3 py-1.5 text-[13px] font-semibold text-white disabled:opacity-40"
             >
-              Popuni
+              {lang('tx.fill')}
             </button>
           </div>
           {(voice.recording || voice.transcribing) && (
             <p className="mt-1.5 px-1 text-[12px] font-medium text-[var(--color-ink-muted)]">
-              {voice.recording ? 'Snimam… tapni mikrofon da završiš' : 'Prepisujem…'}
+              {voice.recording ? lang('tx.recording') : lang('tx.transcribing')}
             </p>
           )}
         </div>
@@ -202,10 +203,10 @@ export default function AddTransaction() {
       {/* Toggle trošak / prihod */}
       <div className="mb-4 grid grid-cols-2 gap-1 rounded-2xl bg-[var(--color-surface-2)] p-1">
         <ToggleBtn active={type === 'expense'} onClick={() => switchType('expense')} tone="expense">
-          Trošak
+          {lang('tx.expense')}
         </ToggleBtn>
         <ToggleBtn active={type === 'income'} onClick={() => switchType('income')} tone="income">
-          Prihod
+          {lang('tx.income')}
         </ToggleBtn>
       </div>
 
@@ -234,7 +235,7 @@ export default function AddTransaction() {
       </div>
 
       {/* Kategorije */}
-      <p className="mb-2 text-[13px] font-semibold text-[var(--color-ink-muted)]">Kategorija</p>
+      <p className="mb-2 text-[13px] font-semibold text-[var(--color-ink-muted)]">{lang('tx.category')}</p>
       <div className="mb-5 grid grid-cols-4 gap-2">
         {cats.map((c) => {
           const active = c.id === categoryId
@@ -267,7 +268,7 @@ export default function AddTransaction() {
       </div>
 
       {/* Datum */}
-      <p className="mb-2 text-[13px] font-semibold text-[var(--color-ink-muted)]">Datum</p>
+      <p className="mb-2 text-[13px] font-semibold text-[var(--color-ink-muted)]">{lang('tx.date')}</p>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {dateOptions.map((d) => (
           <button
@@ -297,24 +298,24 @@ export default function AddTransaction() {
           }}
         >
           <CalendarDays className="h-4 w-4" />
-          {isCustomDate ? formatDayShort(occurredOn) : 'Drugi datum'}
+          {isCustomDate ? formatDayShort(occurredOn) : lang('tx.otherDate')}
           <input
             type="date"
             value={occurredOn}
             max={today()}
             onChange={(e) => e.target.value && setOccurredOn(e.target.value)}
-            aria-label="Izaberi datum"
+            aria-label={lang('tx.selectDate')}
             className="absolute inset-0 cursor-pointer opacity-0"
           />
         </label>
       </div>
 
       {/* Opis */}
-      <p className="mb-2 text-[13px] font-semibold text-[var(--color-ink-muted)]">Opis (opciono)</p>
+      <p className="mb-2 text-[13px] font-semibold text-[var(--color-ink-muted)]">{lang('tx.description')}</p>
       <input
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="npr. ručak sa drugom"
+        placeholder={lang('tx.descPlaceholder')}
         className="mb-6 w-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 text-[14px] placeholder:text-[var(--color-ink-faint)] focus:border-[var(--color-brand)] focus:outline-none"
       />
 
@@ -324,7 +325,7 @@ export default function AddTransaction() {
           <button
             type="button"
             onClick={remove}
-            aria-label="Obriši"
+            aria-label={lang('tx.delete')}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-expense-soft)] text-[var(--color-expense)] active:scale-95"
           >
             <Trash2 className="h-5 w-5" />
@@ -337,7 +338,7 @@ export default function AddTransaction() {
           className="brand-bg flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold text-white shadow-[var(--shadow-float)] transition-all active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
         >
           <Check className="h-5 w-5" strokeWidth={2.5} />
-          {editId ? 'Sačuvaj izmene' : 'Sačuvaj'}
+          {editId ? lang('tx.saveChanges') : lang('tx.save')}
         </button>
       </div>
     </motion.div>
@@ -379,8 +380,8 @@ function quickDates() {
   const p = new Date(t)
   p.setDate(t.getDate() - 2)
   return [
-    { value: toDay(t), label: 'Danas' },
-    { value: toDay(y), label: 'Juče' },
+    { value: toDay(t), label: lang('tx.today') },
+    { value: toDay(y), label: lang('tx.yesterday') },
     { value: toDay(p), label: prekjuceLabel(p) },
   ]
 }

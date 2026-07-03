@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Bell, BellRing, Tags, Check, Pencil, Repeat, LogOut, Cloud, Loader2, Palette, User } from 'lucide-react'
+import { ArrowLeft, Bell, BellRing, Tags, Check, Pencil, Repeat, LogOut, Palette, User } from 'lucide-react'
 import { useAllCategories, useProfile } from '../hooks/useData'
 import { updateProfile, setCategoryBudget } from '../lib/repo'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -8,7 +8,6 @@ import { RecurringSection } from '../components/RecurringSection'
 import { CategoryManager } from '../components/CategoryManager'
 import { formatNumber, CURRENCIES } from '../lib/format'
 import { useAuth } from '../lib/auth'
-import { syncNow, usePendingCount } from '../lib/sync'
 import { enablePush, disablePush, pushSupported, pushPermission } from '../lib/push'
 import { applyTheme, type ThemeMode } from '../lib/theme'
 import { t, LANGUAGES } from '../lib/i18n'
@@ -56,13 +55,13 @@ export default function Settings() {
       <div className="card mb-5 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[13px] text-[var(--color-ink-muted)]">Ime</p>
+            <p className="text-[13px] text-[var(--color-ink-muted)]">{t('settings.name')}</p>
             {editingName ? (
               <input
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value.slice(0, 30))}
                 autoFocus
-                placeholder="Tvoje ime"
+                placeholder={t('settings.namePlaceholder')}
                 className="mt-1 w-48 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-[16px] font-semibold focus:border-[var(--color-brand)] focus:outline-none"
               />
             ) : (
@@ -129,7 +128,7 @@ export default function Settings() {
       {/* Budžeti po kategoriji */}
       <SectionTitle icon={<Tags className="h-4 w-4" />}>{t('settings.budgets')}</SectionTitle>
       <p className="mb-2 px-1 text-[12px] text-[var(--color-ink-muted)]">
-        Postavi mesečni limit i upozorićemo te kad se približiš. (AI će predložiti limite u sledećoj fazi.)
+        {t('settings.budgetsDesc')}
       </p>
       <div className="card mb-5 divide-y divide-[var(--color-line)] px-4">
         {expenseCats.map((c) => (
@@ -150,19 +149,19 @@ export default function Settings() {
         <div className="grid grid-cols-3 gap-1 rounded-xl bg-[var(--color-surface-2)] p-1">
           {(
             [
-              { key: 'auto', label: 'Auto' },
-              { key: 'light', label: 'Svetla' },
-              { key: 'dark', label: 'Tamna' },
-            ] as { key: ThemeMode; label: string }[]
-          ).map((t) => {
-            const active = (settings.theme ?? 'auto') === t.key
+              { key: 'auto', labelKey: 'settings.themeAuto' },
+              { key: 'light', labelKey: 'settings.themeLight' },
+              { key: 'dark', labelKey: 'settings.themeDark' },
+            ] as { key: ThemeMode; labelKey: string }[]
+          ).map((opt) => {
+            const active = (settings.theme ?? 'auto') === opt.key
             return (
               <button
-                key={t.key}
+                key={opt.key}
                 type="button"
                 onClick={async () => {
-                  applyTheme(t.key)
-                  await updateProfile({ settings: { ...settings, theme: t.key } })
+                  applyTheme(opt.key)
+                  await updateProfile({ settings: { ...settings, theme: opt.key } })
                 }}
                 className="rounded-lg py-2 text-[13px] font-semibold transition-all"
                 style={{
@@ -171,7 +170,7 @@ export default function Settings() {
                   boxShadow: active ? 'var(--shadow-card)' : 'none',
                 }}
               >
-                {t.label}
+                {t(opt.labelKey)}
               </button>
             )
           })}
@@ -184,32 +183,32 @@ export default function Settings() {
         <PushControl />
         <div className="divide-y divide-[var(--color-line)]">
           <ToggleRow
-            label="Kad stižu ponavljanja"
-            desc="Podsetnik za primanja i račune koji dospevaju"
+            label={t('notify.due')}
+            desc={t('notify.dueDesc')}
             on={settings.notifyDue ?? true}
             onToggle={() => toggleNotify('notifyDue', true)}
           />
           <ToggleRow
-            label="Kad ugrožavaš cilj štednje"
-            desc="Kad trošiš brže nego što cilj dozvoljava"
+            label={t('notify.goal')}
+            desc={t('notify.goalDesc')}
             on={settings.notifyGoal ?? true}
             onToggle={() => toggleNotify('notifyGoal', true)}
           />
           <ToggleRow
-            label="Dnevni podsetnik"
-            desc="Blag podsetnik uveče ako nisi ništa uneo"
+            label={t('notify.daily')}
+            desc={t('notify.dailyDesc')}
             on={settings.notifyDaily ?? false}
             onToggle={() => toggleNotify('notifyDaily', false)}
           />
           <ToggleRow
-            label="Mesečni rezime"
-            desc="Kratak pregled prošlog meseca 1. u mesecu"
+            label={t('notify.monthly')}
+            desc={t('notify.monthlyDesc')}
             on={settings.notifyMonthly ?? true}
             onToggle={() => toggleNotify('notifyMonthly', true)}
           />
           <ToggleRow
-            label="Vibracija"
-            desc="Lagana vibracija na uspešan unos"
+            label={t('notify.haptic')}
+            desc={t('notify.hapticDesc')}
             on={settings.hapticOn}
             onToggle={() => toggle('hapticOn')}
           />
@@ -346,10 +345,7 @@ function PushControl() {
     return (
       <div className="flex items-start gap-2 border-b border-[var(--color-line)] py-3.5 text-[12px] text-[var(--color-ink-muted)]">
         <BellRing className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          Push obaveštenja rade u instaliranoj aplikaciji. Dodaj Financely na početni ekran
-          (na iPhone-u je push dostupan od iOS 16.4).
-        </p>
+        <p>{t('notify.pushHint')}</p>
       </div>
     )
   }
@@ -373,13 +369,13 @@ function PushControl() {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-[var(--color-line)] py-3.5">
       <div className="min-w-0">
-        <p className="text-[14px] font-medium">Push obaveštenja</p>
+        <p className="text-[14px] font-medium">{t('notify.push')}</p>
         <p className="text-[12px] text-[var(--color-ink-muted)]">
           {perm === 'denied'
-            ? 'Blokirano — uključi u podešavanjima browsera'
+            ? t('notify.pushDenied')
             : enabled
-              ? 'Uključeno na ovom uređaju'
-              : 'Dozvoli da te podsećamo'}
+              ? t('notify.pushEnabled')
+              : t('notify.pushAllow')}
         </p>
       </div>
       <button
@@ -393,7 +389,7 @@ function PushControl() {
             : { background: 'var(--color-brand)', color: '#fff' }
         }
       >
-        {busy ? '…' : enabled ? 'Isključi' : 'Uključi'}
+        {busy ? '…' : enabled ? t('notify.pushOff') : t('notify.pushOn')}
       </button>
     </div>
   )
@@ -401,45 +397,16 @@ function PushControl() {
 
 function SyncAndLogout() {
   const { user, signOut } = useAuth()
-  const pending = usePendingCount()
-  const [syncing, setSyncing] = useState(false)
-  const [syncMsg, setSyncMsg] = useState<string | null>(null)
-
-  async function handleSync() {
-    if (!user) return
-    setSyncing(true)
-    setSyncMsg(null)
-    const result = await syncNow(user.id)
-    setSyncMsg(result.ok ? 'Sinhronizovano!' : `Greška: ${result.error}`)
-    setSyncing(false)
-  }
 
   return (
     <div className="mt-6 space-y-3 pb-4">
-      <p className="text-center text-[12px] text-[var(--color-ink-muted)]">
-        {pending === 0
-          ? 'Sve sinhronizovano ✓'
-          : `${pending} ${pending === 1 ? 'promena čeka' : 'promene čekaju'} mrežu…`}
-      </p>
-      <button
-        type="button"
-        onClick={handleSync}
-        disabled={syncing}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] py-3 text-[14px] font-semibold text-[var(--color-brand)] active:scale-[0.98] disabled:opacity-60"
-      >
-        {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
-        Sinhronizuj sa cloud-om
-      </button>
-      {syncMsg && (
-        <p className="text-center text-[12px] text-[var(--color-ink-muted)]">{syncMsg}</p>
-      )}
       <button
         type="button"
         onClick={signOut}
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--color-expense)] bg-[var(--color-surface)] py-3 text-[14px] font-semibold text-[var(--color-expense)] active:scale-[0.98]"
       >
         <LogOut className="h-4 w-4" />
-        Odjavi se
+        {t('settings.signOut')}
       </button>
       <p className="text-center text-[12px] text-[var(--color-ink-faint)]">
         {user?.email} · Financely

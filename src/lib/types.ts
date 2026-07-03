@@ -34,7 +34,7 @@ export interface Transaction {
 export type RecurringKind = 'bill' | 'income'
 
 /** 'day:10' = svakog 10. u mesecu; 'last_thursday' = poslednji četvrtak. */
-export type RecurringSchedule = `day:${number}` | 'last_thursday'
+export type RecurringSchedule = `day:${number}` | 'last_thursday' | `last_day`
 
 export interface RecurringItem {
   id: string

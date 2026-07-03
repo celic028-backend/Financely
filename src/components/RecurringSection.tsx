@@ -4,11 +4,12 @@ import { useAllCategories, useRecurring } from '../hooks/useData'
 import { addRecurring, updateRecurring, deleteRecurring } from '../lib/recurring'
 import { CategoryIcon } from './CategoryIcon'
 import { formatNumber } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { RecurringItem, RecurringKind, RecurringSchedule } from '../lib/types'
 
 function scheduleLabel(s: RecurringSchedule): string {
-  if (s === 'last_thursday') return 'poslednji četvrtak'
-  return `svakog ${s.split(':')[1]}.`
+  if (s === 'last_thursday' || s === 'last_day') return 'poslednji dan'
+  return `svakog ${s.split(':')[1]}. u mesecu`
 }
 
 export function RecurringSection() {
@@ -22,7 +23,7 @@ export function RecurringSection() {
     <div className="card mb-5 px-4 py-2">
       {items.length === 0 && (
         <p className="py-3 text-[13px] text-[var(--color-ink-muted)]">
-          Dodaj primanja i račune koji se ponavljaju (npr. stipendija, kirija, Netflix) da te podsećamo.
+          {t('recurring.emptyHint')}
         </p>
       )}
       <div className="divide-y divide-[var(--color-line)]">
@@ -41,7 +42,7 @@ export function RecurringSection() {
                 <p className="truncate text-[14px] font-medium">{it.name}</p>
                 <p className="text-[12px] text-[var(--color-ink-muted)]">
                   {scheduleLabel(it.schedule)} ·{' '}
-                  {it.amount ? `${formatNumber(it.amount)} din` : 'varira'}
+                  {it.amount ? `${formatNumber(it.amount)} din` : 'promenljiv iznos'}
                 </p>
               </div>
               <button
@@ -62,7 +63,7 @@ export function RecurringSection() {
         onClick={() => setEditing('new')}
         className="mt-1 flex w-full items-center justify-center gap-2 py-3 text-[14px] font-semibold text-[var(--color-brand)]"
       >
-        <Plus className="h-4 w-4" /> Dodaj ponavljanje
+        <Plus className="h-4 w-4" /> {t('recurring.add')}
       </button>
 
       {editing && (
@@ -87,9 +88,8 @@ function RecurringEditor({
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
   const [amount, setAmount] = useState(initial?.amount ? String(initial.amount) : '')
-  const [lastThu, setLastThu] = useState(initial?.schedule === 'last_thursday')
   const [dayNum, setDayNum] = useState(
-    initial && initial.schedule !== 'last_thursday'
+    initial && initial.schedule !== 'last_thursday' && initial.schedule !== 'last_day'
       ? initial.schedule.split(':')[1]
       : '1',
   )
@@ -102,9 +102,7 @@ function RecurringEditor({
 
   async function save() {
     if (!canSave) return
-    const schedule: RecurringSchedule = lastThu
-      ? 'last_thursday'
-      : (`day:${Math.min(Math.max(parseInt(dayNum || '1', 10), 1), 31)}` as RecurringSchedule)
+    const schedule: RecurringSchedule = `day:${Math.min(Math.max(parseInt(dayNum || '1', 10), 1), 31)}` as RecurringSchedule
     const cat = cats.find((c) => c.id === categoryId)
     const payload = {
       kind,
@@ -133,7 +131,7 @@ function RecurringEditor({
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-[16px] font-bold">
-            {initial ? 'Izmeni ponavljanje' : 'Novo ponavljanje'}
+            {initial ? t('recurring.editTitle') : t('recurring.newTitle')}
           </h3>
           <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-surface-2)]">
             <X className="h-4 w-4" />
@@ -156,22 +154,22 @@ function RecurringEditor({
                 boxShadow: kind === k ? 'var(--shadow-card)' : 'none',
               }}
             >
-              {k === 'bill' ? 'Račun / trošak' : 'Primanje'}
+              {k === 'bill' ? t('recurring.bill') : t('recurring.income')}
             </button>
           ))}
         </div>
 
         {/* Naziv */}
-        <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">Naziv</label>
+        <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">{t('recurring.nameLabel')}</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="npr. Netflix, Stipendija, Kirija"
+          placeholder={t('recurring.namePlaceholder')}
           className="mb-3 w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] focus:border-[var(--color-brand)] focus:outline-none"
         />
 
         {/* Kategorija */}
-        <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">Kategorija</label>
+        <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">{t('recurring.categoryLabel')}</label>
         <div className="mb-3 grid grid-cols-4 gap-2">
           {relevantCats.map((c) => {
             const active = c.id === categoryId
@@ -197,54 +195,34 @@ function RecurringEditor({
 
         {/* Iznos */}
         <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">
-          Iznos (ostavi prazno ako varira)
+          {t('recurring.amountLabel')}
         </label>
         <div className="mb-3 flex items-center gap-2">
           <input
             value={amount ? formatNumber(parseInt(amount || '0', 10)) : ''}
             onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 9))}
             inputMode="numeric"
-            placeholder="varira"
+            placeholder="0"
             className="tnum w-40 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5 text-[15px] font-semibold focus:border-[var(--color-brand)] focus:outline-none"
           />
           <span className="text-[13px] text-[var(--color-ink-muted)]">din</span>
         </div>
 
         {/* Raspored */}
-        <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">Kada</label>
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setLastThu(false)}
-            className="rounded-full border px-3 py-1.5 text-[13px] font-medium"
-            style={{
-              borderColor: !lastThu ? 'var(--color-brand)' : 'var(--color-line)',
-              background: !lastThu ? 'var(--color-brand-soft)' : 'var(--color-surface)',
-              color: !lastThu ? 'var(--color-brand)' : 'var(--color-ink)',
-            }}
+        <label className="mb-1 block text-[12px] font-medium text-[var(--color-ink-muted)]">
+          {t('recurring.whenLabel')}
+        </label>
+        <div className="mb-4 flex items-center gap-2">
+          <select
+            value={dayNum}
+            onChange={(e) => setDayNum(e.target.value)}
+            className="tnum rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5 text-[14px] font-medium focus:border-[var(--color-brand)] focus:outline-none"
           >
-            Dan u mesecu
-          </button>
-          {!lastThu && (
-            <input
-              value={dayNum}
-              onChange={(e) => setDayNum(e.target.value.replace(/\D/g, '').slice(0, 2))}
-              inputMode="numeric"
-              className="tnum w-14 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-center text-[13px]"
-            />
-          )}
-          <button
-            type="button"
-            onClick={() => setLastThu(true)}
-            className="rounded-full border px-3 py-1.5 text-[13px] font-medium"
-            style={{
-              borderColor: lastThu ? 'var(--color-brand)' : 'var(--color-line)',
-              background: lastThu ? 'var(--color-brand-soft)' : 'var(--color-surface)',
-              color: lastThu ? 'var(--color-brand)' : 'var(--color-ink)',
-            }}
-          >
-            Poslednji četvrtak
-          </button>
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+              <option key={d} value={String(d)}>{d}.</option>
+            ))}
+          </select>
+          <span className="text-[13px] text-[var(--color-ink-muted)]">{t('recurring.inMonth')}</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -263,7 +241,7 @@ function RecurringEditor({
             disabled={!canSave}
             className="brand-bg flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-[14px] font-semibold text-white disabled:opacity-40"
           >
-            <Check className="h-5 w-5" /> Sačuvaj
+            <Check className="h-5 w-5" /> {t('recurring.save')}
           </button>
         </div>
       </div>

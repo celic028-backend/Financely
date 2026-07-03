@@ -8,6 +8,7 @@ import { SavingsCard } from '../components/SavingsCard'
 import { HomeReminders } from '../components/HomeReminders'
 import { LeftoverPrompt } from '../components/LeftoverPrompt'
 import { InstallHint } from '../components/InstallHint'
+import { NotificationPrompt } from '../components/NotificationPrompt'
 import { BalanceSheet } from '../components/BalanceSheet'
 import { formatRsd, formatNumber, formatMonthLabel, currencySymbol, today, monthKey, parseDay } from '../lib/format'
 import { nextDueOnOrAfter } from '../lib/recurring'
@@ -135,6 +136,9 @@ export default function Home() {
         <SavingsCard />
       </div>
 
+      {/* Push notification prompt */}
+      <NotificationPrompt />
+
       {/* PWA install hint */}
       <InstallHint />
 
@@ -208,9 +212,9 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         <Plus className="h-6 w-6" strokeWidth={2.5} />
       </div>
       <div>
-        <p className="font-semibold">Počni da pratiš svoje pare</p>
+        <p className="font-semibold">{t('home.emptyTitle')}</p>
         <p className="mt-1 text-[13px] text-[var(--color-ink-muted)]">
-          Unesi prvi trošak ili prihod — za par sekundi ćeš videti gde ti idu pare.
+          {t('home.emptyDesc')}
         </p>
       </div>
       <button
@@ -218,7 +222,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         onClick={onAdd}
         className="brand-bg mt-1 rounded-full px-5 py-2.5 text-[14px] font-semibold text-white active:scale-95"
       >
-        Dodaj prvi unos
+        {t('home.emptyAction')}
       </button>
     </div>
   )

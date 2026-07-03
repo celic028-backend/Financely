@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { CategoryIcon } from './CategoryIcon'
 import { formatSigned, formatDayRelative } from '../lib/format'
+import { t } from '../lib/i18n'
 import type { Category, Transaction } from '../lib/types'
 
 export function TransactionRow({
@@ -20,9 +21,9 @@ export function TransactionRow({
     tx.description?.trim() ||
     (isIncome
       ? tx.incomeKind === 'extra'
-        ? 'Zarada sa strane'
-        : 'Redovna primanja'
-      : (category?.name ?? 'Trošak'))
+        ? t('tx.extraIncome')
+        : t('tx.regularIncome')
+      : (category?.name ?? t('tx.expense')))
 
   return (
     <motion.button
@@ -43,7 +44,7 @@ export function TransactionRow({
 
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-medium text-[var(--color-ink)]">
-          {category?.name ?? 'Nepoznato'}
+          {category?.name ?? t('tx.unknown')}
         </span>
         <span className="block truncate text-[13px] text-[var(--color-ink-muted)]">
           {showDate ? `${formatDayRelative(tx.occurredOn)} · ` : ''}
@@ -54,7 +55,7 @@ export function TransactionRow({
       <span
         className="tnum shrink-0 text-[15px] font-semibold"
         style={{
-          color: isIncome ? 'var(--color-income)' : 'var(--color-ink)',
+          color: isIncome ? 'var(--color-income)' : 'var(--color-expense)',
         }}
       >
         {formatSigned(tx.amount, tx.type)}

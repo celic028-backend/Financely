@@ -1,29 +1,21 @@
-import { useNavigate } from 'react-router-dom'
 import { BellRing } from 'lucide-react'
 import { useReminders } from '../hooks/useData'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { useCategoryMap } from '../hooks/useData'
-import type { Reminder } from '../lib/recurring'
+import { formatNumber } from '../lib/format'
+import { t } from '../lib/i18n'
 
 export function HomeReminders() {
   const reminders = useReminders()
   const catMap = useCategoryMap()
-  const navigate = useNavigate()
 
   if (reminders.length === 0) return null
-
-  function enter(r: Reminder) {
-    const it = r.item
-    const q = new URLSearchParams({ type: it.kind === 'income' ? 'income' : 'expense', cat: it.categoryId })
-    if (it.amount) q.set('amount', String(it.amount))
-    navigate(`/dodaj?${q.toString()}`)
-  }
 
   return (
     <section className="mt-4">
       <div className="mb-1 flex items-center gap-1.5 px-1 text-[var(--color-ink-muted)]">
         <BellRing className="h-4 w-4" />
-        <h2 className="text-[13px] font-semibold">Podsetnici</h2>
+        <h2 className="text-[13px] font-semibold">{t('home.reminders')}</h2>
       </div>
       <div className="card divide-y divide-[var(--color-line)] px-4">
         {reminders.map((r) => {
@@ -43,13 +35,11 @@ export function HomeReminders() {
                   {dueLabel(r.daysUntil)}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => enter(r)}
-                className="brand-bg shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-semibold text-white active:scale-95"
-              >
-                Unesi
-              </button>
+              {r.item.amount && (
+                <span className="tnum shrink-0 text-[14px] font-semibold" style={{ color }}>
+                  {formatNumber(r.item.amount)} din
+                </span>
+              )}
             </div>
           )
         })}
@@ -59,17 +49,13 @@ export function HomeReminders() {
 }
 
 function dueLabel(days: number): string {
-  if (days < 0) return `Kasni ${Math.abs(days)} ${plural(Math.abs(days))}`
-  if (days === 0) return 'Stiže danas'
-  if (days === 1) return 'Stiže sutra'
-  return `Stiže za ${days} dana`
+  if (days < 0) return `${t('home.overdue')} ${Math.abs(days)} ${Math.abs(days) === 1 ? t('home.day') : t('home.days')}`
+  if (days === 0) return t('home.dueToday')
+  if (days === 1) return t('home.dueTomorrow')
+  return `${t('home.dueIn')} ${days} ${t('home.days')}`
 }
 
 function dueColor(days: number): string {
   if (days <= 0) return 'var(--color-warn)'
   return 'var(--color-ink-muted)'
-}
-
-function plural(n: number): string {
-  return n === 1 ? 'dan' : 'dana'
 }
